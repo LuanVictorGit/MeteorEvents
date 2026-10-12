@@ -8,7 +8,9 @@ import org.bukkit.block.data.BlockData;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class CraterRollback {
 
@@ -43,9 +45,18 @@ public final class CraterRollback {
     }
 
     private final List<BlockRecord> records = new ArrayList<>();
+    private final Set<String> modifiedKeys = new HashSet<>();
 
     public void addRecord(Location loc, Material originalMaterial, BlockData originalData, Material placedMaterial) {
         records.add(new BlockRecord(loc, originalMaterial, originalData, placedMaterial));
+        if (loc != null && loc.getWorld() != null) {
+            modifiedKeys.add(loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
+        }
+    }
+
+    public boolean containsLocation(Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
+        return modifiedKeys.contains(loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
     }
 
     public List<BlockRecord> getRecords() {
@@ -76,5 +87,6 @@ public final class CraterRollback {
             });
         }
         records.clear();
+        modifiedKeys.clear();
     }
 }

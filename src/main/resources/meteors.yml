@@ -49,7 +49,7 @@ meteors:
     core-block: "MAGMA_BLOCK"
     fragment-count: 4
     fragment-block: "MAGMA_BLOCK"
-    exploration-duration-seconds: 180
+    exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
     required-key: "AIR"
@@ -88,7 +88,7 @@ meteors:
     core-block: "BLUE_ICE"
     fragment-count: 6
     fragment-block: "PACKED_ICE"
-    exploration-duration-seconds: 240
+    exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
     required-key: "AIR"
@@ -127,7 +127,7 @@ meteors:
     core-block: "CRYING_OBSIDIAN"
     fragment-count: 8
     fragment-block: "CRYING_OBSIDIAN"
-    exploration-duration-seconds: 300
+    exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
     required-key: "AIR"
@@ -168,7 +168,7 @@ meteors:
     core-block: "ANCIENT_DEBRIS"
     fragment-count: 12
     fragment-block: "OBSIDIAN"
-    exploration-duration-seconds: 360
+    exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
     required-key: "AIR"

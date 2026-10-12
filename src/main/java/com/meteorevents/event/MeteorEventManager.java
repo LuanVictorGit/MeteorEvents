@@ -263,4 +263,14 @@ public final class MeteorEventManager {
         }
         return null;
     }
+
+    public ActiveMeteorEvent findEventInImpactRegion(Location loc) {
+        if (loc == null || loc.getWorld() == null) return null;
+        for (ActiveMeteorEvent event : activeEvents.values()) {
+            if (event.isInImpactRegion(loc)) {
+                return event;
+            }
+        }
+        return null;
+    }
 }

@@ -6,6 +6,7 @@ import com.meteorevents.event.ActiveMeteorEvent;
 import com.meteorevents.event.MeteorEventManager;
 import com.meteorevents.loot.LootManager;
 import com.meteorevents.packet.PacketVisualManager;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
@@ -16,8 +17,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockExplodeEvent;
+import org.bukkit.event.block.BlockPistonExtendEvent;
+import org.bukkit.event.block.BlockPistonRetractEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityChangeBlockEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
@@ -29,12 +36,14 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class MeteorListener implements Listener {
     private final MeteorEventManager eventManager;
     private final ConfigManager configManager;
     private final LootManager lootManager;
     private final PacketVisualManager visualManager;
+    private final Map<UUID, Long> messageCooldowns = new HashMap<>();
 
     public MeteorListener(MeteorEventManager eventManager, ConfigManager configManager,
                           LootManager lootManager, PacketVisualManager visualManager) {
@@ -42,6 +51,25 @@ public final class MeteorListener implements Listener {
         this.configManager = configManager;
         this.lootManager = lootManager;
         this.visualManager = visualManager;
+    }
+
+    private void sendProtectedMessage(Player player) {
+        if (player == null) return;
+        long now = System.currentTimeMillis();
+        Long last = messageCooldowns.get(player.getUniqueId());
+        if (last != null && now - last < 2000L) {
+            return;
+        }
+        messageCooldowns.put(player.getUniqueId(), now);
+        String msg = configManager.getMessage("protections.crater-protected");
+        if (msg == null || msg.isEmpty()) {
+            msg = "&cEsta região está protegida até o meteoro ser saqueado!";
+        }
+        String formatted = ChatColor.translateAlternateColorCodes('&', msg);
+        player.sendMessage(configManager.getMessage("prefix") + formatted);
+        try {
+            player.sendTitle("", formatted, 0, 30, 10);
+        } catch (Throwable ignored) {}
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -54,35 +82,46 @@ public final class MeteorListener implements Listener {
         Block block = event.getClickedBlock();
 
         if (block != null) {
-            ActiveMeteorEvent fragmentEvent = eventManager.findEventWithFragment(block.getLocation());
-            if (fragmentEvent != null) {
-                event.setCancelled(true);
-                fragmentEvent.removeFragment(block.getLocation());
-
-                RewardTable table = configManager.getRewardTable(fragmentEvent.getType().getRewardTable());
-                ItemStack fragment = lootManager.createFragmentItem(table);
-
-                Location dropLoc = block.getLocation().add(0.5, 0.5, 0.5);
-                if (dropLoc.getWorld() != null) {
-                    dropLoc.getWorld().dropItemNaturally(dropLoc, fragment);
-                }
-
-                Map<String, String> ph = new HashMap<>();
-                ph.put("fragment", fragment.hasItemMeta() && fragment.getItemMeta().hasDisplayName()
-                        ? fragment.getItemMeta().getDisplayName() : fragment.getType().name());
-
-                String msg = configManager.getFormatted("rewards.fragment-mined", ph);
-                if (!msg.isEmpty()) {
-                    player.sendMessage(configManager.getMessage("prefix") + msg);
-                }
-                visualManager.playLocalizedSound(dropLoc, "BLOCK_STONE_BREAK", 2.0f, 1.2f);
-                return;
-            }
-
             ActiveMeteorEvent coreEvent = eventManager.findEventForChestOrCore(block.getLocation());
             if (coreEvent != null) {
                 event.setCancelled(true);
                 coreEvent.claimCore(player);
+                return;
+            }
+
+            ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(block.getLocation());
+            if (impactEvent != null) {
+                if (!impactEvent.isClaimed()) {
+                    event.setCancelled(true);
+                    sendProtectedMessage(player);
+                    return;
+                }
+
+                if (impactEvent.isFragmentLocation(block.getLocation())) {
+                    event.setCancelled(true);
+                    impactEvent.removeFragment(block.getLocation());
+
+                    RewardTable table = configManager.getRewardTable(impactEvent.getType().getRewardTable());
+                    ItemStack fragment = lootManager.createFragmentItem(table);
+
+                    Location dropLoc = block.getLocation().add(0.5, 0.5, 0.5);
+                    if (dropLoc.getWorld() != null) {
+                        dropLoc.getWorld().dropItemNaturally(dropLoc, fragment);
+                    }
+
+                    Map<String, String> ph = new HashMap<>();
+                    ph.put("fragment", fragment.hasItemMeta() && fragment.getItemMeta().hasDisplayName()
+                            ? fragment.getItemMeta().getDisplayName() : fragment.getType().name());
+
+                    String msg = configManager.getFormatted("rewards.fragment-mined", ph);
+                    if (!msg.isEmpty()) {
+                        player.sendMessage(configManager.getMessage("prefix") + msg);
+                    }
+                    visualManager.playLocalizedSound(dropLoc, "BLOCK_STONE_BREAK", 2.0f, 1.2f);
+                    return;
+                }
+
+                event.setCancelled(true);
                 return;
             }
         }
@@ -109,36 +148,37 @@ public final class MeteorListener implements Listener {
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         Block block = event.getBlock();
-        ActiveMeteorEvent chestEvent = eventManager.findEventForChestOrCore(block.getLocation());
-        if (chestEvent != null) {
+        ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(block.getLocation());
+        if (impactEvent != null) {
             event.setCancelled(true);
-            return;
+            if (!impactEvent.isClaimed()) {
+                sendProtectedMessage(event.getPlayer());
+                return;
+            }
+
+            if (impactEvent.isFragmentLocation(block.getLocation())) {
+                impactEvent.removeFragment(block.getLocation());
+
+                RewardTable table = configManager.getRewardTable(impactEvent.getType().getRewardTable());
+                ItemStack fragment = lootManager.createFragmentItem(table);
+
+                Location dropLoc = block.getLocation().add(0.5, 0.5, 0.5);
+                if (dropLoc.getWorld() != null) {
+                    dropLoc.getWorld().dropItemNaturally(dropLoc, fragment);
+                }
+
+                Player player = event.getPlayer();
+                Map<String, String> ph = new HashMap<>();
+                ph.put("fragment", fragment.hasItemMeta() && fragment.getItemMeta().hasDisplayName()
+                        ? fragment.getItemMeta().getDisplayName() : fragment.getType().name());
+
+                String msg = configManager.getFormatted("rewards.fragment-mined", ph);
+                if (!msg.isEmpty()) {
+                    player.sendMessage(configManager.getMessage("prefix") + msg);
+                }
+                visualManager.playLocalizedSound(dropLoc, "BLOCK_STONE_BREAK", 2.0f, 1.2f);
+            }
         }
-
-        ActiveMeteorEvent meteorEvent = eventManager.findEventWithFragment(block.getLocation());
-        if (meteorEvent == null) return;
-
-        event.setCancelled(true);
-        meteorEvent.removeFragment(block.getLocation());
-
-        RewardTable table = configManager.getRewardTable(meteorEvent.getType().getRewardTable());
-        ItemStack fragment = lootManager.createFragmentItem(table);
-
-        Location dropLoc = block.getLocation().add(0.5, 0.5, 0.5);
-        if (dropLoc.getWorld() != null) {
-            dropLoc.getWorld().dropItemNaturally(dropLoc, fragment);
-        }
-
-        Player player = event.getPlayer();
-        Map<String, String> ph = new HashMap<>();
-        ph.put("fragment", fragment.hasItemMeta() && fragment.getItemMeta().hasDisplayName()
-                ? fragment.getItemMeta().getDisplayName() : fragment.getType().name());
-
-        String msg = configManager.getFormatted("rewards.fragment-mined", ph);
-        if (!msg.isEmpty()) {
-            player.sendMessage(configManager.getMessage("prefix") + msg);
-        }
-        visualManager.playLocalizedSound(dropLoc, "BLOCK_STONE_BREAK", 2.0f, 1.2f);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -198,16 +238,73 @@ public final class MeteorListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBlockPlace(BlockPlaceEvent event) {
+        ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(event.getBlock().getLocation());
+        if (impactEvent != null) {
+            event.setCancelled(true);
+            sendProtectedMessage(event.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
+        ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(event.getBlock().getLocation());
+        if (impactEvent != null) {
+            event.setCancelled(true);
+            sendProtectedMessage(event.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onBucketFill(PlayerBucketFillEvent event) {
+        ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(event.getBlockClicked().getLocation());
+        if (impactEvent != null) {
+            event.setCancelled(true);
+            sendProtectedMessage(event.getPlayer());
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onEntityChangeBlock(EntityChangeBlockEvent event) {
+        ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(event.getBlock().getLocation());
+        if (impactEvent != null) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPistonExtend(BlockPistonExtendEvent event) {
+        for (Block b : event.getBlocks()) {
+            ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(b.getLocation());
+            if (impactEvent != null) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onPistonRetract(BlockPistonRetractEvent event) {
+        for (Block b : event.getBlocks()) {
+            ActiveMeteorEvent impactEvent = eventManager.findEventInImpactRegion(b.getLocation());
+            if (impactEvent != null) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onEntityExplode(EntityExplodeEvent event) {
         for (ActiveMeteorEvent active : eventManager.getActiveEvents()) {
-            event.blockList().removeIf(block -> active.isChestOrCore(block.getLocation()) || active.isFragmentLocation(block.getLocation()));
+            event.blockList().removeIf(block -> active.isInImpactRegion(block.getLocation()));
         }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onBlockExplode(BlockExplodeEvent event) {
         for (ActiveMeteorEvent active : eventManager.getActiveEvents()) {
-            event.blockList().removeIf(block -> active.isChestOrCore(block.getLocation()) || active.isFragmentLocation(block.getLocation()));
+            event.blockList().removeIf(block -> active.isInImpactRegion(block.getLocation()));
         }
     }
 

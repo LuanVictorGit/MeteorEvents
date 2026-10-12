@@ -86,3 +86,8 @@ admin:
 
   # Error when no allowed world is available.
   no-valid-world: "&cCould not find a valid allowed world for the meteor strike."
+
+# Protection and restriction messages.
+protections:
+  # When attempting to break or modify blocks in the crater before looting.
+  crater-protected: "&cEsta região está protegida até o meteoro ser saqueado!"

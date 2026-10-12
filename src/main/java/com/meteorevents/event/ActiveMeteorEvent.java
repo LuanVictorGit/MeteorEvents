@@ -119,6 +119,10 @@ public final class ActiveMeteorEvent {
         } else if (stage == Stage.EXPLORATION) {
             explorationSecondsRemaining--;
 
+            if (explorationSecondsRemaining == 60 && !claimed.get()) {
+                broadcastMessage("announcements.despawn-warning");
+            }
+
             if (lockSecondsRemaining > 0) {
                 lockSecondsRemaining--;
                 updateCooldownHologram();
@@ -294,6 +298,30 @@ public final class ActiveMeteorEvent {
             }
         }
         return false;
+    }
+
+    public boolean isInImpactRegion(Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
+        if (stage != Stage.EXPLORATION && stage != Stage.POST_LOOT_VANISHING) return false;
+        if (!loc.getWorld().equals(impactLocation.getWorld())) return false;
+
+        if (rollback.containsLocation(loc)) {
+            return true;
+        }
+
+        int radius = type.getCraterRadius() + 3;
+        double dx = loc.getX() - impactLocation.getX();
+        double dz = loc.getZ() - impactLocation.getZ();
+        if (dx * dx + dz * dz <= radius * radius) {
+            int depth = type.getCraterDepth() + 5;
+            return loc.getY() >= impactLocation.getY() - depth && loc.getY() <= impactLocation.getY() + 10;
+        }
+
+        return false;
+    }
+
+    public boolean isClaimed() {
+        return claimed.get();
     }
 
     public boolean claimCore(Player player) {

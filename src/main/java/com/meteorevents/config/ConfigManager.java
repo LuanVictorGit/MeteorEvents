@@ -103,7 +103,7 @@ public final class ConfigManager {
         omenDurationSeconds = Math.max(3, cfg.getInt("stages.omen-duration-seconds", 10));
         coreLockSeconds = Math.max(0, cfg.getInt("stages.core-lock-seconds", 30));
         postLootVanishSeconds = Math.max(5, cfg.getInt("stages.post-loot-vanish-seconds", 30));
-        defaultExplorationSeconds = Math.max(30, cfg.getInt("stages.default-exploration-seconds", 180));
+        defaultExplorationSeconds = Math.max(30, cfg.getInt("stages.default-exploration-seconds", 600));
     }
 
     private void loadMeteors() {
@@ -143,7 +143,7 @@ public final class ConfigManager {
             String coreBlock = ms.getString("core-block", "MAGMA_BLOCK");
             int fragmentCount = Math.max(0, ms.getInt("fragment-count", 4));
             String fragmentBlock = ms.getString("fragment-block", "MAGMA_BLOCK");
-            int explorationDuration = Math.max(20, ms.getInt("exploration-duration-seconds", 180));
+            int explorationDuration = Math.max(20, ms.getInt("exploration-duration-seconds", defaultExplorationSeconds));
             String unlockType = ms.getString("unlock-type", "DIRECT");
             int lockDurationSeconds = Math.max(0, ms.getInt("lock-duration-seconds", 0));
             String requiredKey = ms.getString("required-key", "AIR");
