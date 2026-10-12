@@ -148,13 +148,17 @@ public final class ConfigManager {
             int lockDurationSeconds = Math.max(0, ms.getInt("lock-duration-seconds", 0));
             String requiredKey = ms.getString("required-key", "AIR");
             boolean unstableCore = ms.getBoolean("unstable-core", false);
+            float visualEntityScale = (float) ms.getDouble("visual-entity-scale", key.equalsIgnoreCase("worldbreaker") ? 5.5 : 3.8);
+            boolean smokePlumesEnabled = ms.getBoolean("smoke-plumes-enabled", true);
+            int smokePlumesCount = Math.max(0, ms.getInt("smoke-plumes-count", 12));
 
             MeteorType type = new MeteorType(key.toLowerCase(Locale.ROOT), displayName, rarity, weight, speed,
                     startHeight, horizontalOffset, visualEntity, trailParticles, crossingSound,
                     impactSound, impactSoundVolume, impactSoundPitch, impactParticlesCount,
                     craterRadius, craterDepth, craterMaterials, createFire, rewardTable,
                     coreType, coreBlock, fragmentCount, fragmentBlock, explorationDuration,
-                    unlockType, lockDurationSeconds, requiredKey, unstableCore);
+                    unlockType, lockDurationSeconds, requiredKey, unstableCore,
+                    visualEntityScale, smokePlumesEnabled, smokePlumesCount);
             meteorTypes.put(key.toLowerCase(Locale.ROOT), type);
         }
     }

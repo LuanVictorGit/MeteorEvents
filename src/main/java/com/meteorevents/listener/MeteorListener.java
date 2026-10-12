@@ -63,7 +63,7 @@ public final class MeteorListener implements Listener {
         messageCooldowns.put(player.getUniqueId(), now);
         String msg = configManager.getMessage("protections.crater-protected");
         if (msg == null || msg.isEmpty()) {
-            msg = "&cEsta região está protegida até o meteoro ser saqueado!";
+            msg = "&cThis impact area is protected until the meteor is looted!";
         }
         String formatted = ChatColor.translateAlternateColorCodes('&', msg);
         player.sendMessage(configManager.getMessage("prefix") + formatted);
@@ -183,6 +183,10 @@ public final class MeteorListener implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerMove(PlayerMoveEvent event) {
+        if (eventManager.getActiveEvents().isEmpty()) {
+            return;
+        }
+
         Location from = event.getFrom();
         Location to = event.getTo();
         if (to == null || (from.getBlockX() == to.getBlockX() && from.getBlockZ() == to.getBlockZ())) {
@@ -225,6 +229,11 @@ public final class MeteorListener implements Listener {
                 }
             }
         }
+    }
+
+    @EventHandler
+    public void onPlayerQuit(org.bukkit.event.player.PlayerQuitEvent event) {
+        messageCooldowns.remove(event.getPlayer().getUniqueId());
     }
 
     @EventHandler

@@ -1,7 +1,7 @@
 name: MeteorEvents
 version: '${project.version}'
 author: lHawk_
-website: https://minebuilders.com.br
+website: https://minebuilders.com.br/discord
 main: com.meteorevents.MeteorEventsPlugin
 api-version: '1.16'
 folia-supported: true

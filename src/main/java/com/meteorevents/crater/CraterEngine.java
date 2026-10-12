@@ -1,5 +1,6 @@
 package com.meteorevents.crater;
 
+import com.meteorevents.compat.Platform;
 import com.meteorevents.config.MeteorType;
 import com.meteorevents.config.ProtectionSettings;
 import org.bukkit.Location;
@@ -89,7 +90,7 @@ public final class CraterEngine {
                         colY = centerY;
                     }
 
-                    int bottomY = Math.max(world.getMinHeight() + 2, colY - localDepth);
+                    int bottomY = Math.max(Platform.getMinHeight(world) + 2, colY - localDepth);
 
                     for (int y = colY + 1; y > bottomY; y--) {
                         Block block = world.getBlockAt(colX, y, colZ);
@@ -147,7 +148,7 @@ public final class CraterEngine {
             }
 
             Material coreBlockMat = parseSingleMaterial(type.getCoreBlock(), Material.MAGMA_BLOCK);
-            int baseBottomY = Math.max(world.getMinHeight() + 2, centerY - depth);
+            int baseBottomY = Math.max(Platform.getMinHeight(world) + 2, centerY - depth);
             Block coreBase = world.getBlockAt(cx, baseBottomY, cz);
             rollback.addRecord(coreBase.getLocation(), coreBase.getType(), coreBase.getBlockData(), coreBlockMat);
             coreBase.setType(coreBlockMat, false);

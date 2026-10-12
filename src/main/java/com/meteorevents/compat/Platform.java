@@ -51,4 +51,13 @@ public final class Platform {
         packetEvents = null;
         worldGuard = null;
     }
+
+    public static int getMinHeight(org.bukkit.World world) {
+        if (world == null) return 0;
+        try {
+            return world.getMinHeight();
+        } catch (Throwable ignored) {
+            return 0;
+        }
+    }
 }

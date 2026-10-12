@@ -39,7 +39,7 @@ public final class PacketVisualManager {
         return ENTITY_ID_COUNTER.decrementAndGet();
     }
 
-    public int spawnVisualEntity(UUID eventId, Location location, String entityTypeStr, int viewDistance) {
+    public int spawnVisualEntity(UUID eventId, Location location, String entityTypeStr, float scale, int viewDistance) {
         int entityId = getNextEntityId();
         activeEventEntities.computeIfAbsent(eventId, k -> ConcurrentHashMap.newKeySet()).add(entityId);
 
@@ -71,8 +71,8 @@ public final class PacketVisualManager {
                 metadata.add(new EntityData<>(9, EntityDataTypes.INT, 1));
                 metadata.add(new EntityData<>(10, EntityDataTypes.INT, 1));
                 metadata.add(new EntityData<>(11, EntityDataTypes.VECTOR3F, new Vector3f(0f, 0f, 0f)));
-                float scale = entityTypeStr != null && entityTypeStr.toUpperCase(Locale.ROOT).contains("WORLDBREAKER") ? 5.5f : 3.8f;
-                metadata.add(new EntityData<>(12, EntityDataTypes.VECTOR3F, new Vector3f(scale, scale, scale)));
+                float entityScale = scale > 0.1f ? scale : (entityTypeStr != null && entityTypeStr.toUpperCase(Locale.ROOT).contains("WORLDBREAKER") ? 5.5f : 3.8f);
+                metadata.add(new EntityData<>(12, EntityDataTypes.VECTOR3F, new Vector3f(entityScale, entityScale, entityScale)));
                 metadata.add(new EntityData<>(16, EntityDataTypes.BYTE, (byte) 3));
                 metadata.add(new EntityData<>(23, EntityDataTypes.ITEMSTACK, displayStack));
                 metadata.add(new EntityData<>(24, EntityDataTypes.BYTE, (byte) 0));
@@ -83,6 +83,10 @@ public final class PacketVisualManager {
         } catch (Throwable ignored) {}
 
         return entityId;
+    }
+
+    public int spawnVisualEntity(UUID eventId, Location location, String entityTypeStr, int viewDistance) {
+        return spawnVisualEntity(eventId, location, entityTypeStr, 3.8f, viewDistance);
     }
 
     public void teleportVisualEntity(int entityId, Location location, float yaw, float pitch, int viewDistance) {
@@ -268,6 +272,8 @@ public final class PacketVisualManager {
             ids[idx++] = id;
         }
 
+        stopFlightSounds(location, viewDistance);
+
         try {
             WrapperPlayServerDestroyEntities packet = new WrapperPlayServerDestroyEntities(ids);
             sendToNearby(location, packet, viewDistance);
@@ -275,6 +281,15 @@ public final class PacketVisualManager {
     }
 
     public void cleanupAll() {
+        for (Player player : org.bukkit.Bukkit.getOnlinePlayers()) {
+            try {
+                player.stopSound(Sound.ITEM_ELYTRA_FLYING);
+            } catch (Throwable ignored) {}
+            try {
+                player.stopSound(Sound.ENTITY_PHANTOM_SWOOP);
+            } catch (Throwable ignored) {}
+        }
+
         if (Platform.hasPacketEvents()) {
             List<Integer> allIds = new ArrayList<>();
             for (Set<Integer> set : activeEventEntities.values()) {
@@ -353,40 +368,93 @@ public final class PacketVisualManager {
         }
         if (viewers.isEmpty()) return;
 
+        Location[] spiralLocations = new Location[3];
+        double angleBase = tick * 0.65;
+        double spiralRadius = 2.4;
+        for (int s = 0; s < 3; s++) {
+            double angle = angleBase + (s * (2.0 * Math.PI / 3.0));
+            Vector off = perp1.clone().multiply(Math.cos(angle) * spiralRadius).add(perp2.clone().multiply(Math.sin(angle) * spiralRadius));
+            spiralLocations[s] = loc.clone().add(off);
+        }
+
+        Location[] tailLocations = new Location[5];
+        for (int step = 1; step <= 5; step++) {
+            tailLocations[step - 1] = loc.clone().subtract(normDir.clone().multiply(step * 2.2));
+        }
+
         for (Player p : viewers) {
             safeSpawnParticle(p, mainParticle, loc, 24, 1.2, 1.2, 1.2, 0.08);
             safeSpawnParticle(p, secondaryParticle, loc, 8, 0.8, 0.8, 0.8, 0.04);
             safeSpawnParticle(p, Particle.CAMPFIRE_COSY_SMOKE, loc, 12, 1.0, 1.0, 1.0, 0.03);
             safeSpawnParticle(p, Particle.FIREWORKS_SPARK, loc, 6, 0.7, 0.7, 0.7, 0.05);
 
-            double angleBase = tick * 0.65;
-            double spiralRadius = 2.4;
-            for (int s = 0; s < 3; s++) {
-                double angle = angleBase + (s * (2.0 * Math.PI / 3.0));
-                Vector off = perp1.clone().multiply(Math.cos(angle) * spiralRadius).add(perp2.clone().multiply(Math.sin(angle) * spiralRadius));
-                Location pLoc = loc.clone().add(off);
-                safeSpawnParticle(p, mainParticle, pLoc, 3, 0.1, 0.1, 0.1, 0.01);
-                safeSpawnParticle(p, Particle.LAVA, pLoc, 1, 0.05, 0.05, 0.05, 0.01);
+            for (Location sLoc : spiralLocations) {
+                safeSpawnParticle(p, mainParticle, sLoc, 3, 0.1, 0.1, 0.1, 0.01);
+                safeSpawnParticle(p, Particle.LAVA, sLoc, 1, 0.05, 0.05, 0.05, 0.01);
             }
 
             for (int step = 1; step <= 5; step++) {
-                Location tail = loc.clone().subtract(normDir.clone().multiply(step * 2.2));
+                Location tail = tailLocations[step - 1];
                 safeSpawnParticle(p, Particle.CAMPFIRE_SIGNAL_SMOKE, tail, 4, 0.5 * step, 0.5 * step, 0.5 * step, 0.02);
                 safeSpawnParticle(p, Particle.SMOKE_LARGE, tail, 3, 0.4 * step, 0.4 * step, 0.4 * step, 0.02);
                 safeSpawnParticle(p, mainParticle, tail, 2, 0.3 * step, 0.3 * step, 0.3 * step, 0.02);
             }
         }
 
-        if (tick % 3 == 0) {
-            playLocalizedSound(loc, "ITEM_ELYTRA_FLYING", 16.0f, 0.65f);
-            playLocalizedSound(loc, "ENTITY_PHANTOM_SWOOP", 12.0f, 0.45f);
-        }
         if (tick % 6 == 0) {
-            playLocalizedSound(loc, "ENTITY_FIREWORK_ROCKET_LAUNCH", 16.0f, 0.40f);
-            playLocalizedSound(loc, "BLOCK_FIRE_AMBIENT", 8.0f, 0.8f);
+            playLocalizedSound(loc, "ENTITY_PHANTOM_SWOOP", 12.0f, 0.55f);
+            playLocalizedSound(loc, "ENTITY_FIREWORK_ROCKET_LAUNCH", 14.0f, 0.40f);
         }
         if (tick % 12 == 0) {
-            playLocalizedSound(loc, "ENTITY_GHAST_SHOOT", 16.0f, 0.5f);
+            playLocalizedSound(loc, "ENTITY_GHAST_SHOOT", 14.0f, 0.50f);
+        }
+    }
+
+    public void stopFlightSounds(Location loc, int viewDistance) {
+        if (loc == null || loc.getWorld() == null) return;
+        double maxDistSq = (double) viewDistance * viewDistance;
+        for (Player p : loc.getWorld().getPlayers()) {
+            if (p.getLocation().distanceSquared(loc) <= maxDistSq) {
+                try {
+                    p.stopSound(Sound.ITEM_ELYTRA_FLYING);
+                } catch (Throwable ignored) {}
+                try {
+                    p.stopSound(Sound.ENTITY_PHANTOM_SWOOP);
+                } catch (Throwable ignored) {}
+                try {
+                    p.stopSound(Sound.ENTITY_FIREWORK_ROCKET_LAUNCH);
+                } catch (Throwable ignored) {}
+                try {
+                    p.stopSound(Sound.ENTITY_FIREWORK_ROCKET_BLAST);
+                } catch (Throwable ignored) {}
+                try {
+                    p.stopSound(Sound.ENTITY_GHAST_SHOOT);
+                } catch (Throwable ignored) {}
+            }
+        }
+    }
+
+    public void renderSmokePlumes(List<Location> plumes, int viewDistance) {
+        if (plumes == null || plumes.isEmpty()) return;
+        Location first = plumes.get(0);
+        if (first == null || first.getWorld() == null) return;
+        World world = first.getWorld();
+        double maxDistSq = (double) viewDistance * viewDistance;
+
+        List<Player> viewers = new ArrayList<>();
+        for (Player p : world.getPlayers()) {
+            if (p.getLocation().distanceSquared(first) <= maxDistSq) {
+                viewers.add(p);
+            }
+        }
+        if (viewers.isEmpty()) return;
+
+        for (Location loc : plumes) {
+            for (Player p : viewers) {
+                safeSpawnParticle(p, Particle.CAMPFIRE_SIGNAL_SMOKE, loc, 3, 0.25, 0.4, 0.25, 0.03);
+                safeSpawnParticle(p, Particle.CAMPFIRE_COSY_SMOKE, loc, 2, 0.2, 0.3, 0.2, 0.02);
+                safeSpawnParticle(p, Particle.FLAME, loc, 1, 0.15, 0.1, 0.15, 0.01);
+            }
         }
     }
 

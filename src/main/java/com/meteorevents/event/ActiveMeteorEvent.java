@@ -141,9 +141,7 @@ public final class ActiveMeteorEvent {
                 }
             }
 
-            for (Location plume : smokePlumeLocations) {
-                visualManager.renderSmokePlume(plume, viewDist);
-            }
+            visualManager.renderSmokePlumes(smokePlumeLocations, viewDist);
             if (explorationSecondsRemaining % 3 == 0 && !smokePlumeLocations.isEmpty()) {
                 Location randomPlume = smokePlumeLocations.get(new Random().nextInt(smokePlumeLocations.size()));
                 visualManager.playLocalizedSound(randomPlume, "BLOCK_CAMPFIRE_CRACKLE", 1.8f, 0.9f);
@@ -157,9 +155,7 @@ public final class ActiveMeteorEvent {
             vanishSecondsRemaining--;
             updateVanishingHologram();
 
-            for (Location plume : smokePlumeLocations) {
-                visualManager.renderSmokePlume(plume, viewDist);
-            }
+            visualManager.renderSmokePlumes(smokePlumeLocations, viewDist);
 
             if (coreLocation != null) {
                 visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_LARGE"), 4, 0.4, 0.4, 0.4, 0.02, viewDist);
@@ -195,7 +191,7 @@ public final class ActiveMeteorEvent {
         broadcastCrossing();
 
         int viewDist = configManager.getViewDistance();
-        meteorEntityId = visualManager.spawnVisualEntity(id, currentLocation, type.getVisualEntity(), viewDist);
+        meteorEntityId = visualManager.spawnVisualEntity(id, currentLocation, type.getVisualEntity(), type.getVisualEntityScale(), viewDist);
         visualManager.playLocalizedSound(currentLocation, type.getCrossingSound(), 16.0f, 0.6f);
     }
 
@@ -204,6 +200,7 @@ public final class ActiveMeteorEvent {
 
         int viewDist = configManager.getViewDistance();
         visualManager.destroyVisualEntity(id, meteorEntityId, currentLocation, viewDist);
+        visualManager.stopFlightSounds(impactLocation, viewDist);
         visualManager.playLocalizedSound(impactLocation, type.getImpactSound(), 16.0f, type.getImpactSoundPitch());
 
         spawnImpactShockwave();

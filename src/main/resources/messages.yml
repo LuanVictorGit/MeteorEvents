@@ -41,6 +41,8 @@ rewards:
 
   # Message when the core is still cooling down (timed lock).
   core-locked: "&cThis core is still dangerously hot! Wait &e{time}s&c for it to cool down."
+  cooling-title: ""
+  cooling-subtitle: "&c⏳ Cooling down: &e{time}s"
 
   # Message when the core requires a specific key item to open.
   core-key-required: "&cYou need a &e{key}&c to unlock this meteor core!"
@@ -90,4 +92,13 @@ admin:
 # Protection and restriction messages.
 protections:
   # When attempting to break or modify blocks in the crater before looting.
-  crater-protected: "&cEsta região está protegida até o meteoro ser saqueado!"
+  crater-protected: "&cThis impact area is protected until the meteor is looted!"
+
+# Packet hologram floating line configurations.
+holograms:
+  cooling-title: "&6&l✦ {meteor} &6&l✦"
+  cooling-subtitle: "&c⏳ Cooling down: &e{time}s"
+  unlocked-title: "&a&l✦ {meteor} &a&l✦"
+  unlocked-subtitle: "&a&l✔ UNLOCKED! &e[Right-Click to Loot]"
+  vanishing-title: "&7✦ Remnants Destabilizing ✦"
+  vanishing-subtitle: "&7⏳ Vanishing in: &e{time}s"

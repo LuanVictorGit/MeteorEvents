@@ -93,5 +93,5 @@ stages:
   post-loot-vanish-seconds: 30
 
   # Default exploration duration (in seconds) during which the core remains available if unlooted.
-  # Default: 180 seconds.
-  default-exploration-seconds: 180
+  # Default: 600 seconds (10 minutes).
+  default-exploration-seconds: 600

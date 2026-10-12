@@ -28,6 +28,12 @@ meteors:
     start-height: 160
     horizontal-offset: 120
     visual-entity: "FIRE_CHARGE"
+    # Scale multiplier for the packet display entity (e.g. 3.8 = huge).
+    visual-entity-scale: 3.8
+    # Whether smoke plumes billow from the crater perimeter after impact.
+    smoke-plumes-enabled: true
+    # Number of smoke plume generators placed around the crater.
+    smoke-plumes-count: 10
     trail-particles:
       - "FLAME"
       - "LAVA"
@@ -67,11 +73,14 @@ meteors:
     start-height: 180
     horizontal-offset: 140
     visual-entity: "SNOWBALL"
+    visual-entity-scale: 3.8
+    smoke-plumes-enabled: true
+    smoke-plumes-count: 12
     trail-particles:
       - "SOUL_FIRE_FLAME"
       - "SNOWFLAKE"
       - "FIREWORKS_SPARK"
-    crossing-sound: "ITEM_ELYTRA_FLYING"
+    crossing-sound: "ENTITY_PHANTOM_SWOOP"
     impact-sound: "BLOCK_GLASS_BREAK"
     impact-sound-volume: 16.0
     impact-sound-pitch: 0.6
@@ -106,6 +115,9 @@ meteors:
     start-height: 200
     horizontal-offset: 160
     visual-entity: "ENDER_EYE"
+    visual-entity-scale: 4.2
+    smoke-plumes-enabled: true
+    smoke-plumes-count: 14
     trail-particles:
       - "PORTAL"
       - "DRAGON_BREATH"
@@ -145,6 +157,9 @@ meteors:
     start-height: 240
     horizontal-offset: 180
     visual-entity: "WORLDBREAKER_FIRE_CHARGE"
+    visual-entity-scale: 5.5
+    smoke-plumes-enabled: true
+    smoke-plumes-count: 18
     trail-particles:
       - "EXPLOSION_LARGE"
       - "FLAME"
