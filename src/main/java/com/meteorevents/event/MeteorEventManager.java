@@ -219,12 +219,35 @@ public final class MeteorEventManager {
         return Collections.unmodifiableCollection(activeEvents.values());
     }
 
+    public Plugin getPlugin() {
+        return plugin;
+    }
+
     public ActiveMeteorEvent findEventNear(Location loc, double radius) {
         if (loc == null || loc.getWorld() == null) return null;
         double radiusSq = radius * radius;
         for (ActiveMeteorEvent event : activeEvents.values()) {
             Location eLoc = event.getImpactLocation();
             if (eLoc.getWorld() != null && eLoc.getWorld().equals(loc.getWorld()) && eLoc.distanceSquared(loc) <= radiusSq) {
+                return event;
+            }
+        }
+        return null;
+    }
+
+    public ActiveMeteorEvent findEventForChestOrCore(Location loc) {
+        if (loc == null || loc.getWorld() == null) return null;
+        for (ActiveMeteorEvent event : activeEvents.values()) {
+            if (event.isChestOrCore(loc)) {
+                return event;
+            }
+        }
+        return null;
+    }
+
+    public ActiveMeteorEvent findEventForEntity(int entityId) {
+        for (ActiveMeteorEvent event : activeEvents.values()) {
+            if (event.isCoreEntity(entityId)) {
                 return event;
             }
         }

@@ -250,18 +250,50 @@ public final class ActiveMeteorEvent {
         visualManager.updateHologram(id, coreLocation.clone().add(0, 0.8, 0), lines, configManager.getViewDistance());
     }
 
+    public boolean isCoreEntity(int entityId) {
+        return coreEntityId != -1 && coreEntityId == entityId;
+    }
+
+    public boolean isChestOrCore(Location loc) {
+        if (loc == null || loc.getWorld() == null) return false;
+        if (chestLocation != null && chestLocation.getWorld() != null && chestLocation.getWorld().equals(loc.getWorld())) {
+            if (chestLocation.getBlockX() == loc.getBlockX() && chestLocation.getBlockZ() == loc.getBlockZ()) {
+                if (Math.abs(chestLocation.getBlockY() - loc.getBlockY()) <= 1) {
+                    return true;
+                }
+            }
+        }
+        if (coreLocation != null && coreLocation.getWorld() != null && coreLocation.getWorld().equals(loc.getWorld())) {
+            if (coreLocation.distanceSquared(loc) <= 5.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public boolean claimCore(Player player) {
-        if (stage != Stage.EXPLORATION || claimed.get()) {
+        if (stage == Stage.POST_LOOT_VANISHING || claimed.get()) {
+            player.sendMessage(configManager.getMessage("prefix") + "§7Este núcleo já foi saqueado! O cenário irá se desestabilizar em breve.");
+            return false;
+        }
+
+        if (stage != Stage.EXPLORATION) {
             return false;
         }
 
         if (lockSecondsRemaining > 0) {
             Map<String, String> ph = new HashMap<>();
             ph.put("time", String.valueOf(lockSecondsRemaining));
-            player.sendMessage(configManager.getFormatted("rewards.core-locked", ph));
+            String msg = configManager.getFormatted("rewards.core-locked", ph);
+            if (!msg.isEmpty()) {
+                player.sendMessage(configManager.getMessage("prefix") + msg);
+            }
+            try {
+                player.sendTitle("", "§c⏳ Resfriando: §e" + lockSecondsRemaining + "s", 0, 20, 5);
+            } catch (Throwable ignored) {}
             visualManager.playLocalizedSound(coreLocation != null ? coreLocation : impactLocation, "BLOCK_LAVA_EXTINGUISH", 2.0f, 1.0f);
             if (coreLocation != null) {
-                visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_NORMAL"), 8, 0.3, 0.3, 0.3, 0.05, configManager.getViewDistance());
+                visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_NORMAL"), 12, 0.4, 0.4, 0.4, 0.05, configManager.getViewDistance());
             }
             return false;
         }
@@ -271,7 +303,7 @@ public final class ActiveMeteorEvent {
             if (reqMat != null && (player.getInventory().getItemInMainHand() == null || player.getInventory().getItemInMainHand().getType() != reqMat)) {
                 Map<String, String> ph = new HashMap<>();
                 ph.put("key", type.getRequiredKey());
-                player.sendMessage(configManager.getFormatted("rewards.core-key-required", ph));
+                player.sendMessage(configManager.getMessage("prefix") + configManager.getFormatted("rewards.core-key-required", ph));
                 return false;
             }
         }
@@ -309,6 +341,7 @@ public final class ActiveMeteorEvent {
         int viewDist = configManager.getViewDistance();
         if (coreLocation != null) {
             visualManager.broadcastParticles(coreLocation, Collections.singletonList("FIREWORKS_SPARK"), 60, 0.6, 0.6, 0.6, 0.12, viewDist);
+            visualManager.playLocalizedSound(coreLocation, "BLOCK_CHEST_OPEN", 3.0f, 1.0f);
             visualManager.playLocalizedSound(coreLocation, "UI_TOAST_CHALLENGE_COMPLETE", 6.0f, 1.0f);
         }
 

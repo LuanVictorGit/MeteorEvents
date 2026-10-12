@@ -18,6 +18,7 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.world.WorldUnloadEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.util.Vector;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -40,51 +41,58 @@ public final class MeteorListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.LEFT_CLICK_BLOCK) return;
+        Player player = event.getPlayer();
         Block block = event.getClickedBlock();
-        if (block == null) return;
 
-        ActiveMeteorEvent meteorEvent = eventManager.findEventWithFragment(block.getLocation());
-        if (meteorEvent != null) {
-            event.setCancelled(true);
-            meteorEvent.removeFragment(block.getLocation());
+        if (block != null) {
+            ActiveMeteorEvent fragmentEvent = eventManager.findEventWithFragment(block.getLocation());
+            if (fragmentEvent != null) {
+                event.setCancelled(true);
+                fragmentEvent.removeFragment(block.getLocation());
 
-            RewardTable table = configManager.getRewardTable(meteorEvent.getType().getRewardTable());
-            ItemStack fragment = lootManager.createFragmentItem(table);
+                RewardTable table = configManager.getRewardTable(fragmentEvent.getType().getRewardTable());
+                ItemStack fragment = lootManager.createFragmentItem(table);
 
-            Location dropLoc = block.getLocation().add(0.5, 0.5, 0.5);
-            if (dropLoc.getWorld() != null) {
-                dropLoc.getWorld().dropItemNaturally(dropLoc, fragment);
+                Location dropLoc = block.getLocation().add(0.5, 0.5, 0.5);
+                if (dropLoc.getWorld() != null) {
+                    dropLoc.getWorld().dropItemNaturally(dropLoc, fragment);
+                }
+
+                Map<String, String> ph = new HashMap<>();
+                ph.put("fragment", fragment.hasItemMeta() && fragment.getItemMeta().hasDisplayName()
+                        ? fragment.getItemMeta().getDisplayName() : fragment.getType().name());
+
+                String msg = configManager.getFormatted("rewards.fragment-mined", ph);
+                if (!msg.isEmpty()) {
+                    player.sendMessage(configManager.getMessage("prefix") + msg);
+                }
+                visualManager.playLocalizedSound(dropLoc, "BLOCK_STONE_BREAK", 2.0f, 1.2f);
+                return;
             }
 
-            Player player = event.getPlayer();
-            Map<String, String> ph = new HashMap<>();
-            ph.put("fragment", fragment.hasItemMeta() && fragment.getItemMeta().hasDisplayName()
-                    ? fragment.getItemMeta().getDisplayName() : fragment.getType().name());
-
-            String msg = configManager.getFormatted("rewards.fragment-mined", ph);
-            if (!msg.isEmpty()) {
-                player.sendMessage(configManager.getMessage("prefix") + msg);
+            ActiveMeteorEvent coreEvent = eventManager.findEventForChestOrCore(block.getLocation());
+            if (coreEvent != null) {
+                event.setCancelled(true);
+                coreEvent.claimCore(player);
+                return;
             }
-            visualManager.playLocalizedSound(dropLoc, "BLOCK_STONE_BREAK", 2.0f, 1.2f);
-            return;
         }
 
-        ActiveMeteorEvent nearEvent = eventManager.findEventNear(block.getLocation(), 4.0);
-        if (nearEvent == null) return;
-
-        if (nearEvent.getStage() == ActiveMeteorEvent.Stage.EXPLORATION) {
-            boolean isChest = nearEvent.getChestLocation() != null
-                    && nearEvent.getChestLocation().getBlockX() == block.getX()
-                    && nearEvent.getChestLocation().getBlockY() == block.getY()
-                    && nearEvent.getChestLocation().getBlockZ() == block.getZ();
-
-            boolean isCore = nearEvent.getCoreLocation() != null
-                    && block.getLocation().distanceSquared(nearEvent.getCoreLocation()) <= 1.8;
-
-            if (isChest || isCore) {
-                event.setCancelled(true);
-                nearEvent.claimCore(event.getPlayer());
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+            Location eyeLoc = player.getEyeLocation();
+            for (ActiveMeteorEvent active : eventManager.getActiveEvents()) {
+                Location coreLoc = active.getCoreLocation();
+                if (coreLoc != null && coreLoc.getWorld() != null && coreLoc.getWorld().equals(eyeLoc.getWorld())) {
+                    if (coreLoc.distanceSquared(eyeLoc) <= 36.0) {
+                        Vector toCore = coreLoc.clone().subtract(eyeLoc).toVector().normalize();
+                        Vector dir = eyeLoc.getDirection().normalize();
+                        if (toCore.dot(dir) > 0.80) {
+                            event.setCancelled(true);
+                            active.claimCore(player);
+                            return;
+                        }
+                    }
+                }
             }
         }
     }

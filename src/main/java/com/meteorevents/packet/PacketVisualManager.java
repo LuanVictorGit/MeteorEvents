@@ -275,6 +275,31 @@ public final class PacketVisualManager {
         activeHologramEntities.clear();
     }
 
+    public void registerPacketListener(com.meteorevents.event.MeteorEventManager eventManager) {
+        if (!Platform.hasPacketEvents()) return;
+        try {
+            PacketEvents.getAPI().getEventManager().registerListener(new com.github.retrooper.packetevents.event.PacketListenerAbstract() {
+                @Override
+                public void onPacketReceive(com.github.retrooper.packetevents.event.PacketReceiveEvent event) {
+                    if (event.getPacketType() == com.github.retrooper.packetevents.protocol.packettype.PacketType.Play.Client.INTERACT_ENTITY) {
+                        com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity packet =
+                                new com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientInteractEntity(event);
+                        int entityId = packet.getEntityId();
+                        com.meteorevents.event.ActiveMeteorEvent meteorEvent = eventManager.findEventForEntity(entityId);
+                        if (meteorEvent != null) {
+                            Player player = (Player) event.getPlayer();
+                            if (player != null) {
+                                com.meteorevents.compat.Schedulers.runAt(eventManager.getPlugin(), player.getLocation(), () -> {
+                                    meteorEvent.claimCore(player);
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+        } catch (Throwable ignored) {}
+    }
+
     public void renderCinematicFlight(Location loc, Vector dir, List<String> trailParticles, int maxParticles, int tick, int viewDistance) {
         if (loc == null || loc.getWorld() == null) return;
         World world = loc.getWorld();
