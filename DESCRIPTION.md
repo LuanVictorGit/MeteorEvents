@@ -1,6 +1,7 @@
 <center>
 <h2>MeteorEvents</h2>
 <p><strong>Cinematic meteor strike events featuring real-time packet trajectories, procedural craters, interactive cores, and customizable rewards.</strong></p>
+<p>Author: <strong>lHawk_</strong> | Contact: <a href="https://minebuilders.com.br">minebuilders.com.br</a></p>
 </center>
 
 <hr>

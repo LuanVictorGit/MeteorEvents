@@ -6,11 +6,19 @@
 
     <groupId>com.meteorevents</groupId>
     <artifactId>MeteorEvents</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <packaging>jar</packaging>
 
     <name>MeteorEvents</name>
     <description>Cinematic meteor strike events with packet visuals, craters, and rewards.</description>
+    <url>https://minebuilders.com.br</url>
+
+    <developers>
+        <developer>
+            <name>lHawk_</name>
+            <url>https://minebuilders.com.br</url>
+        </developer>
+    </developers>
 
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>

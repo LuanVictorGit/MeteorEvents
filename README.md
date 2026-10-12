@@ -1,12 +1,13 @@
 # MeteorEvents
 
 MeteorEvents is a cinematic, performance-optimized meteor event plugin for Minecraft servers, supporting **Minecraft 1.16.5 through 26.x** across **Paper**, **Spigot**, and **Folia**.
+Author: **lHawk_** (Contact: https://minebuilders.com.br)
 
 The plugin introduces atmospheric meteor events featuring real-time packet-driven trajectories, custom sounds, visual shockwaves, procedural crater carving with safe terrain rollback, interactive cores, and customizable loot tables.
 
 ## Version
 
-Current version: **1.0.0**
+Current version: **1.0.1**
 
 ## Requirements
 
@@ -91,6 +92,7 @@ mvn test
 
 ## Version History
 
+- **1.0.1:** Added author metadata (`lHawk_`) and official contact URL (`https://minebuilders.com.br`) across `plugin.yml`, `pom.xml`, and documentation.
 - **1.0.0:** Initial release.
   - Full event lifecycle (Omen, Crossing, Impact, Exploration, Rollback).
   - PacketEvents 2.14.0 integration for virtual falling entities and floating cores.
