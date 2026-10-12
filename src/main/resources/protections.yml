@@ -1,0 +1,67 @@
+# ==============================================================================
+# MeteorEvents - Protections and Terrain Rollback Configuration
+# Configure terrain modification, safe rollback, WorldGuard checks, and damage rules.
+# ==============================================================================
+
+terrain:
+  # Master toggle for terrain alteration.
+  # When true, impacts carve craters and place thematic blocks.
+  # When false, impacts are purely visual effects and no blocks are altered.
+  modify-blocks: true
+
+  # Automatic crater rollback system.
+  # When true, altered terrain is safely restored to its original state after a delay.
+  enable-rollback: true
+
+  # Delay in seconds after the event ends before crater rollback begins.
+  # Default: 120 seconds.
+  rollback-delay-seconds: 120
+
+  # Protect player-placed blocks during rollback.
+  # If true, blocks that players placed or replaced in the crater will NOT be overwritten.
+  # Default: true.
+  preserve-player-modifications: true
+
+  # Whether trees, leaves, and foliage can be cleared by the crater.
+  # Default: true.
+  affect-trees-and-foliage: true
+
+  # Whether fluids (water/lava) can be replaced or cleared.
+  # Default: false.
+  affect-fluids: false
+
+  # Blocks that are immune to crater destruction (e.g., BEDROCK, CHEST, SPAWNER).
+  blacklisted-blocks:
+    - "BEDROCK"
+    - "CHEST"
+    - "TRAPPED_CHEST"
+    - "BARRIER"
+    - "SPAWNER"
+    - "COMMAND_BLOCK"
+    - "STRUCTURE_BLOCK"
+
+damage:
+  # Whether the impact explosion inflicts damage to nearby entities.
+  # Default: false (safe impact, knocks back entities but avoids griefing).
+  damage-entities: false
+
+  # Amount of damage dealt if damage-entities is true.
+  entity-damage-amount: 8.0
+
+  # Horizontal knockback velocity applied to nearby entities at impact.
+  # Default: 1.2.
+  knockback-strength: 1.2
+
+integrations:
+  # WorldGuard integration.
+  # If true, MeteorEvents checks if the chosen landing point is inside a protected region.
+  # Impact will be relocated if the region does not allow building or explosions.
+  worldguard-enabled: true
+
+  # Prevent meteor impacts within WorldGuard regions where 'build' or 'other-explosion' is denied.
+  respect-worldguard-regions: true
+
+# Worlds completely excluded from meteor events.
+prohibited-worlds:
+  - "world_the_end"
+  - "world_nether"

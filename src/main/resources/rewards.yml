@@ -1,0 +1,234 @@
+# ==============================================================================
+# MeteorEvents - Reward and Loot Configuration
+# Configure reward tables, item probabilities, amounts, custom lore, and console commands.
+# ==============================================================================
+
+tables:
+  # ----------------------------------------------------------------------------
+  # Ember Loot Table
+  # ----------------------------------------------------------------------------
+  ember_loot:
+    # Minimum and maximum number of items picked from this table for the chest.
+    min-rolls: 3
+    max-rolls: 6
+
+    # List of possible item rewards.
+    items:
+      - material: "IRON_INGOT"
+        min-amount: 4
+        max-amount: 16
+        chance: 80.0
+      - material: "GOLD_INGOT"
+        min-amount: 2
+        max-amount: 8
+        chance: 60.0
+      - material: "COAL"
+        min-amount: 8
+        max-amount: 24
+        chance: 70.0
+      - material: "FIRE_CHARGE"
+        min-amount: 1
+        max-amount: 4
+        chance: 50.0
+      - material: "DIAMOND"
+        min-amount: 1
+        max-amount: 3
+        chance: 35.0
+        name: "&6Ember-Infused Diamond"
+        lore:
+          - "&7Forged in the heart of an ember meteor."
+      - material: "GOLDEN_APPLE"
+        min-amount: 1
+        max-amount: 2
+        chance: 25.0
+
+    # Commands executed on the console when the core is claimed.
+    # Placeholder: {player} is replaced by the player's name.
+    commands:
+      - command: "xp add {player} 150 points"
+        chance: 100.0
+
+    # Collectible fragment item dropped when mining fragment blocks.
+    fragment:
+      material: "IRON_NUGGET"
+      name: "&6&lEmber Shard"
+      lore:
+        - "&7A glowing fragment from an Ember Meteor."
+        - "&eCollect 9 to forge an Ember Catalyst!"
+      amount: 1
+
+  # ----------------------------------------------------------------------------
+  # Frostfall Loot Table
+  # ----------------------------------------------------------------------------
+  frostfall_loot:
+    min-rolls: 4
+    max-rolls: 7
+    items:
+      - material: "DIAMOND"
+        min-amount: 2
+        max-amount: 6
+        chance: 70.0
+        name: "&bGlacial Diamond"
+        lore:
+          - "&7Emits a bone-chilling frost aura."
+      - material: "PACKED_ICE"
+        min-amount: 8
+        max-amount: 32
+        chance: 80.0
+      - material: "BLUE_ICE"
+        min-amount: 4
+        max-amount: 16
+        chance: 60.0
+      - material: "EXPERIENCE_BOTTLE"
+        min-amount: 6
+        max-amount: 18
+        chance: 65.0
+      - material: "BOW"
+        min-amount: 1
+        max-amount: 1
+        chance: 40.0
+        name: "&bFrostbite Bow"
+        lore:
+          - "&7Arrows freeze the air they pass through."
+        enchantments:
+          - "POWER:3"
+          - "INFINITY:1"
+      - material: "GOLDEN_APPLE"
+        min-amount: 2
+        max-amount: 4
+        chance: 50.0
+
+    commands:
+      - command: "xp add {player} 350 points"
+        chance: 100.0
+
+    fragment:
+      material: "PRISMARINE_SHARD"
+      name: "&b&lFrost Shard"
+      lore:
+        - "&7A crystal of pure cosmic frost."
+        - "&eCollect 9 to craft a Frost Catalyst!"
+      amount: 1
+
+  # ----------------------------------------------------------------------------
+  # Voidfall Loot Table
+  # ----------------------------------------------------------------------------
+  voidfall_loot:
+    min-rolls: 5
+    max-rolls: 8
+    items:
+      - material: "DIAMOND"
+        min-amount: 4
+        max-amount: 10
+        chance: 80.0
+      - material: "NETHERITE_SCRAP"
+        min-amount: 1
+        max-amount: 3
+        chance: 50.0
+        name: "&5Void-Touched Scrap"
+        lore:
+          - "&7Dense alloy from the void between stars."
+      - material: "ENDER_PEARL"
+        min-amount: 4
+        max-amount: 12
+        chance: 75.0
+      - material: "CRYING_OBSIDIAN"
+        min-amount: 4
+        max-amount: 12
+        chance: 65.0
+      - material: "ENCHANTED_GOLDEN_APPLE"
+        min-amount: 1
+        max-amount: 2
+        chance: 35.0
+      - material: "DIAMOND_SWORD"
+        min-amount: 1
+        max-amount: 1
+        chance: 40.0
+        name: "&5Voidreaver Blade"
+        lore:
+          - "&7Pulsates with cosmic energy."
+        enchantments:
+          - "SHARPNESS:4"
+          - "LOOTING:2"
+          - "UNBREAKING:3"
+
+    commands:
+      - command: "xp add {player} 750 points"
+        chance: 100.0
+
+    fragment:
+      material: "ENDER_EYE"
+      name: "&5&lVoid Essence"
+      lore:
+        - "&7Stirring darkness from deep space."
+        - "&eA key ingredient in ancient enchantments."
+      amount: 1
+
+  # ----------------------------------------------------------------------------
+  # Worldbreaker Loot Table
+  # ----------------------------------------------------------------------------
+  worldbreaker_loot:
+    min-rolls: 7
+    max-rolls: 12
+    items:
+      - material: "NETHERITE_INGOT"
+        min-amount: 1
+        max-amount: 3
+        chance: 60.0
+        name: "&4Worldbreaker Ingot"
+        lore:
+          - "&7Indestructible cosmic core metal."
+      - material: "NETHERITE_SCRAP"
+        min-amount: 3
+        max-amount: 8
+        chance: 85.0
+      - material: "DIAMOND_BLOCK"
+        min-amount: 1
+        max-amount: 3
+        chance: 70.0
+      - material: "ENCHANTED_GOLDEN_APPLE"
+        min-amount: 2
+        max-amount: 5
+        chance: 75.0
+      - material: "NETHER_STAR"
+        min-amount: 1
+        max-amount: 1
+        chance: 40.0
+        name: "&eCore of the Worldbreaker"
+        lore:
+          - "&7The radiant heart of a fallen star."
+      - material: "NETHERITE_PICKAXE"
+        min-amount: 1
+        max-amount: 1
+        chance: 45.0
+        name: "&4Star-Forged Mattock"
+        lore:
+          - "&7Excavates stone with stellar fury."
+        enchantments:
+          - "EFFICIENCY:5"
+          - "FORTUNE:3"
+          - "MENDING:1"
+          - "UNBREAKING:3"
+
+    commands:
+      - command: "xp add {player} 2000 points"
+        chance: 100.0
+
+    fragment:
+      material: "OBSIDIAN"
+      name: "&4&lWorldbreaker Core Fragment"
+      lore:
+        - "&7Super-dense obsidian infused with stellar plasma."
+        - "&eRadiates immense primordial heat."
+      amount: 1
+
+# Mechanics for participation and discovery rewards.
+mechanics:
+  # Whether to reward all nearby players when the meteor strikes.
+  participation-rewards-enabled: true
+
+  # Radius in blocks from the impact location to consider players participants.
+  participation-radius: 50
+
+  # Experience points granted to each participant at impact.
+  participation-xp: 50

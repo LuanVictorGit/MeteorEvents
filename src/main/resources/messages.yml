@@ -1,0 +1,85 @@
+# ==============================================================================
+# MeteorEvents - Message Configuration
+# All messages support standard Minecraft color codes (&) and placeholders.
+# Placeholders: {meteor}, {world}, {x}, {y}, {z}, {player}, {time}, {type}
+# ==============================================================================
+
+# Chat message prefix prepended to informational plugin messages.
+prefix: "&8[&6MeteorEvents&8]&r "
+
+# Event stage announcements and broadcasts.
+announcements:
+  # Broadcast when a meteor omen begins.
+  omen-chat: "&eA cosmic tremor shakes the sky above &f{world}&e! A meteor approaches!"
+  omen-title: "&6&lMETEOR SIGHTED!"
+  omen-subtitle: "&eWatch the heavens above {world}..."
+
+  # Broadcast when the meteor begins its atmospheric crossing.
+  crossing-chat: "&6The &f{meteor}&6 has pierced the atmosphere! Heading toward &eX: {x}, Z: {z}&6!"
+  crossing-title: "&c&lINCOMING METEOR!"
+  crossing-subtitle: "&eImpact imminent near &c{x}, {z}&e!"
+
+  # Broadcast when the meteor strikes the surface.
+  impact-chat: "&c&lIMPACT! &eThe &f{meteor}&e crashed at &c{x}, {y}, {z}&e! Explore the crater!"
+  impact-title: "&4&lMETEOR IMPACT!"
+  impact-subtitle: "&eCrater formed at &c{x}, {y}, {z}&e!"
+
+  # Warning broadcast before the core destabilizes and ends.
+  despawn-warning: "&7The &f{meteor}&7 remnants at &e{x}, {z}&7 are cooling down and will destabilize soon..."
+
+  # Broadcast when the exploration phase concludes.
+  ended-chat: "&7The &f{meteor}&7 event has concluded. Remnants have settled."
+
+# Rewards and interaction messages.
+rewards:
+  # Message when a player successfully claims the core chest.
+  core-claimed-broadcast: "&aPlayer &f{player}&a claimed the rewards of the &f{meteor}&a core at &e{x}, {z}&a!"
+  core-claimed-player: "&aYou have successfully unlocked the &f{meteor}&a core!"
+
+  # Message when the core is still cooling down (timed lock).
+  core-locked: "&cThis core is still dangerously hot! Wait &e{time}s&c for it to cool down."
+
+  # Message when the core requires a specific key item to open.
+  core-key-required: "&cYou need a &e{key}&c to unlock this meteor core!"
+
+  # Message when a player mines a meteorite fragment block.
+  fragment-mined: "&6&l[+] &eYou excavated a fragment and obtained &f{fragment}&e!"
+
+  # Message when a player receives participation rewards at impact.
+  participation-reward: "&eYou witnessed the meteor impact and received &a+{xp} XP&e for bravery!"
+
+# Administrative and command response messages.
+admin:
+  # When a meteor is manually started.
+  event-started: "&aSuccessfully triggered meteor &f{type}&a in world &e{world}&a!"
+
+  # When active events are stopped.
+  event-stopped: "&cAll active meteor events have been terminated and cleaned up."
+
+  # When the configuration is reloaded.
+  reloaded: "&aMeteorEvents configuration reloaded successfully."
+
+  # When querying active events and none are active.
+  no-active-events: "&eThere are currently no active meteor events."
+
+  # Header and format for the /meteorevents info command.
+  info-header: "&6=== &eActive Meteor Events ({count}) &6==="
+  info-entry: "&7- &f{type}&7 in &e{world}&7 at &c{x}, {y}, {z} &7(Stage: &b{stage}&7, Time left: &e{time}s&7)"
+
+  # Response for /meteorevents next command.
+  next-scheduled: "&7Next automated meteor strike check in approx. &e{time}s&7."
+
+  # Response for /meteorevents types command.
+  types-list: "&6Available meteor types: &f{types}"
+
+  # Response for /meteorevents test command.
+  test-started: "&aSpawning safe visual test for &f{type}&a at your current location (no crater damage)."
+
+  # Error when player does not have required permission.
+  no-permission: "&cYou do not have permission to execute this command."
+
+  # Error when an invalid meteor type is specified.
+  unknown-type: "&cUnknown meteor type: &e{type}&c. Use &f/meteorevents types&c to list available types."
+
+  # Error when no allowed world is available.
+  no-valid-world: "&cCould not find a valid allowed world for the meteor strike."

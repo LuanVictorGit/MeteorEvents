@@ -1,0 +1,221 @@
+# ==============================================================================
+# MeteorEvents - Meteor Type Definitions
+# Configure custom meteor types, appearances, velocities, trails, and impacts.
+# ==============================================================================
+
+meteors:
+  # ----------------------------------------------------------------------------
+  # Ember Meteor (Common)
+  # Basic fiery meteor with frequent spawns, magma crater, and common loot.
+  # ----------------------------------------------------------------------------
+  ember:
+    # Display name shown in chat broadcasts, titles, and boss bars.
+    display-name: "&6&lEmber Meteor"
+
+    # Rarity tier indicator.
+    rarity: "COMMON"
+
+    # Weight relative to other types when selecting a random meteor strike.
+    # Higher weight = higher chance. Default: 50.
+    weight: 50
+
+    # Flight speed in blocks per tick along its trajectory.
+    # Higher = faster fall. Valid range: 0.3 - 2.5. Default: 0.85.
+    speed: 0.85
+
+    # Initial vertical height (Y offset above the ground impact point).
+    # Default: 110 blocks.
+    start-height: 110
+
+    # Horizontal trajectory offset distance (X and Z distance from impact origin).
+    # Simulates an angled atmospheric entry. Default: 80 blocks.
+    horizontal-offset: 80
+
+    # Packet visual entity model for the meteor head:
+    # Supported: FIREBALL, SMALL_FIREBALL, DRAGON_FIREBALL, END_CRYSTAL, ARMOR_STAND.
+    visual-entity: "FIREBALL"
+
+    # Particle types spawned along the trajectory trail.
+    # Valid Bukkit particle names: FLAME, LAVA, CAMPFIRE_COSY_SMOKE, SMOKE_LARGE, etc.
+    trail-particles:
+      - "FLAME"
+      - "LAVA"
+      - "CAMPFIRE_COSY_SMOKE"
+
+    # Sound played as the meteor crosses the sky.
+    crossing-sound: "ENTITY_FIREWORK_ROCKET_BLAST"
+
+    # Sound played at the exact moment of impact.
+    impact-sound: "ENTITY_GENERIC_EXPLODE"
+
+    # Sound volume and pitch at impact.
+    impact-sound-volume: 4.0
+    impact-sound-pitch: 0.8
+
+    # Visual explosion particle count at impact.
+    impact-particles-count: 120
+
+    # Explosion radius for crater carving (0 = visual impact only, no blocks removed).
+    crater-radius: 4
+
+    # Maximum crater depth in blocks below the surface.
+    crater-depth: 3
+
+    # Materials used to line the inside bowl of the crater.
+    crater-materials:
+      - "MAGMA_BLOCK"
+      - "BASALT"
+      - "OBSIDIAN"
+
+    # Whether fire is placed around the crater rim.
+    create-fire: true
+
+    # Key in rewards.yml to pull loot and commands from.
+    reward-table: "ember_loot"
+
+    # Core appearance at the crater center:
+    # CHEST, CRYSTAL, or PEDESTAL.
+    core-type: "CHEST"
+
+    # Decorative block placed below the chest or crystal.
+    core-block: "MAGMA_BLOCK"
+
+    # Number of collectible fragments placed around the crater.
+    fragment-count: 4
+
+    # Block material representing collectible fragments.
+    fragment-block: "MAGMA_BLOCK"
+
+    # Duration in seconds the crater and core remain active before cleanup.
+    exploration-duration-seconds: 180
+
+    # Core unlocking condition: DIRECT, TIMED, or KEY.
+    unlock-type: "DIRECT"
+
+    # Lock duration in seconds if unlock-type is TIMED.
+    lock-duration-seconds: 0
+
+    # Key material if unlock-type is KEY.
+    required-key: "AIR"
+
+    # If true, core destabilizes with sparks and visual pop if left unopened.
+    unstable-core: false
+
+  # ----------------------------------------------------------------------------
+  # Frostfall Meteor (Rare)
+  # Glacial meteor with soul fire, snowflakes, blue ice, and chilly loot.
+  # ----------------------------------------------------------------------------
+  frostfall:
+    display-name: "&b&lFrostfall Meteor"
+    rarity: "RARE"
+    weight: 25
+    speed: 0.95
+    start-height: 125
+    horizontal-offset: 90
+    visual-entity: "END_CRYSTAL"
+    trail-particles:
+      - "SOUL_FIRE_FLAME"
+      - "SNOWFLAKE"
+      - "FIREWORKS_SPARK"
+    crossing-sound: "ITEM_ELYTRA_FLYING"
+    impact-sound: "BLOCK_GLASS_BREAK"
+    impact-sound-volume: 4.5
+    impact-sound-pitch: 0.6
+    impact-particles-count: 150
+    crater-radius: 5
+    crater-depth: 3
+    crater-materials:
+      - "BLUE_ICE"
+      - "PACKED_ICE"
+      - "SNOW_BLOCK"
+    create-fire: false
+    reward-table: "frostfall_loot"
+    core-type: "CRYSTAL"
+    core-block: "BLUE_ICE"
+    fragment-count: 6
+    fragment-block: "PACKED_ICE"
+    exploration-duration-seconds: 240
+    unlock-type: "TIMED"
+    lock-duration-seconds: 15
+    required-key: "AIR"
+    unstable-core: true
+
+  # ----------------------------------------------------------------------------
+  # Voidfall Meteor (Epic)
+  # Cosmic purple meteor with dragon breath, end stone, and mysterious rewards.
+  # ----------------------------------------------------------------------------
+  voidfall:
+    display-name: "&5&lVoidfall Meteor"
+    rarity: "EPIC"
+    weight: 15
+    speed: 1.10
+    start-height: 140
+    horizontal-offset: 100
+    visual-entity: "DRAGON_FIREBALL"
+    trail-particles:
+      - "PORTAL"
+      - "DRAGON_BREATH"
+      - "REVERSE_PORTAL"
+    crossing-sound: "ENTITY_ENDERMAN_TELEPORT"
+    impact-sound: "ENTITY_ENDER_DRAGON_GROWL"
+    impact-sound-volume: 5.0
+    impact-sound-pitch: 0.7
+    impact-particles-count: 180
+    crater-radius: 6
+    crater-depth: 4
+    crater-materials:
+      - "CRYING_OBSIDIAN"
+      - "END_STONE"
+      - "OBSIDIAN"
+    create-fire: false
+    reward-table: "voidfall_loot"
+    core-type: "CRYSTAL"
+    core-block: "CRYING_OBSIDIAN"
+    fragment-count: 8
+    fragment-block: "CRYING_OBSIDIAN"
+    exploration-duration-seconds: 300
+    unlock-type: "TIMED"
+    lock-duration-seconds: 25
+    required-key: "AIR"
+    unstable-core: true
+
+  # ----------------------------------------------------------------------------
+  # Worldbreaker Meteor (Legendary)
+  # Massive apocalyptic meteor with catastrophic visuals, deep crater, and treasures.
+  # ----------------------------------------------------------------------------
+  worldbreaker:
+    display-name: "&4&lWorldbreaker Meteor"
+    rarity: "LEGENDARY"
+    weight: 5
+    speed: 1.35
+    start-height: 160
+    horizontal-offset: 120
+    visual-entity: "FIREBALL"
+    trail-particles:
+      - "EXPLOSION_LARGE"
+      - "FLAME"
+      - "LAVA"
+      - "CAMPFIRE_COSY_SMOKE"
+    crossing-sound: "ENTITY_WITHER_SPAWN"
+    impact-sound: "ENTITY_LIGHTNING_BOLT_THUNDER"
+    impact-sound-volume: 6.0
+    impact-sound-pitch: 0.5
+    impact-particles-count: 260
+    crater-radius: 8
+    crater-depth: 5
+    crater-materials:
+      - "ANCIENT_DEBRIS"
+      - "OBSIDIAN"
+      - "MAGMA_BLOCK"
+      - "CRYING_OBSIDIAN"
+    create-fire: true
+    reward-table: "worldbreaker_loot"
+    core-type: "CHEST"
+    core-block: "ANCIENT_DEBRIS"
+    fragment-count: 12
+    fragment-block: "OBSIDIAN"
+    exploration-duration-seconds: 360
+    unlock-type: "TIMED"
+    lock-duration-seconds: 40
+    required-key: "AIR"
+    unstable-core: true

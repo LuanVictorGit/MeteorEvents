@@ -1,0 +1,38 @@
+name: MeteorEvents
+version: '${project.version}'
+main: com.meteorevents.MeteorEventsPlugin
+api-version: '1.16'
+folia-supported: true
+softdepend: [packetevents, WorldGuard]
+description: Cinematic meteor strike events with packet visuals, craters, and rewards.
+commands:
+  meteorevents:
+    description: Main MeteorEvents administrative and informational command.
+    aliases: [mevents, meteor, meteors]
+    permission: meteorevents.info
+    usage: /<command> [start|stop|next|reload|types|test|info]
+permissions:
+  meteorevents.admin:
+    description: Full administrative control over MeteorEvents.
+    default: op
+    children:
+      meteorevents.start: true
+      meteorevents.stop: true
+      meteorevents.reload: true
+      meteorevents.info: true
+      meteorevents.test: true
+  meteorevents.start:
+    description: Allows manually triggering a meteor event.
+    default: op
+  meteorevents.stop:
+    description: Allows cancelling active meteor events.
+    default: op
+  meteorevents.reload:
+    description: Allows reloading plugin configuration files.
+    default: op
+  meteorevents.info:
+    description: Allows viewing active event status and next scheduled strike.
+    default: true
+  meteorevents.test:
+    description: Allows testing visual effects safely without terrain damage.
+    default: op

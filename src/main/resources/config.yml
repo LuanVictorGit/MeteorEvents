@@ -1,0 +1,87 @@
+# ==============================================================================
+# MeteorEvents - Main Configuration
+# All time durations are expressed in seconds unless specified as ticks.
+# ==============================================================================
+
+# Master toggle to enable or disable automatic meteor events.
+# When false, automated timers are stopped, but admin manual commands still work.
+enabled: true
+
+# General timing and scheduling settings for automated meteor strikes.
+scheduling:
+  # Interval in seconds between checks for random meteor strike attempts.
+  # Valid range: 10 - 3600 seconds. Default: 60.
+  check-interval-seconds: 60
+
+  # Probability (percentage 0.0 to 100.0) that a check triggers a meteor event.
+  # Default: 25.0 (25% chance every check).
+  chance-percentage: 25.0
+
+  # Minimum cooldown in seconds between two automated meteor strikes.
+  # Prevents events from occurring too frequently. Default: 600 (10 minutes).
+  min-cooldown-seconds: 600
+
+  # Maximum number of meteor strike events running concurrently across the server.
+  # Valid range: 1 - 10. Default: 2.
+  max-concurrent-events: 2
+
+  # Minimum number of players online required to trigger an automatic meteor event.
+  # Valid range: 0 - 100. Default: 1.
+  min-players-online: 1
+
+  # List of world names where meteors are permitted to land.
+  allowed-worlds:
+    - world
+
+# Spatial rules for selecting random meteor impact locations.
+location:
+  # Minimum horizontal distance (in blocks) from the world spawn point for impacts.
+  # Default: 150 blocks.
+  min-distance-from-spawn: 150
+
+  # Maximum horizontal distance (in blocks) from the world spawn point for impacts.
+  # Default: 2500 blocks.
+  max-distance-from-spawn: 2500
+
+  # Whether to center the random landing location near an online player.
+  # If true, a random online player is picked and the meteor targets an area nearby.
+  # If false, the location is chosen purely at random within the spawn radius.
+  target-near-online-players: true
+
+  # Minimum horizontal offset (in blocks) from the target player.
+  # Default: 80 blocks.
+  player-offset-min: 80
+
+  # Maximum horizontal offset (in blocks) from the target player.
+  # Default: 300 blocks.
+  player-offset-max: 300
+
+  # Prevent meteors from landing in oceans, deep oceans, or bodies of water.
+  # Default: true.
+  avoid-water: true
+
+# Performance and visual packet tuning.
+performance:
+  # Maximum distance in blocks from the meteor for players to receive visual packets.
+  # Players farther than this distance will not receive entity or particle packets.
+  # Valid range: 32 - 256 blocks. Default: 128.
+  view-distance: 128
+
+  # Tick interval for trajectory and particle packet updates.
+  # 1 = every tick (smoothest), 2 = every 2 ticks (reduced packet load).
+  # Default: 1.
+  update-rate-ticks: 1
+
+  # Maximum number of trail particles spawned per tick per active meteor.
+  # Keeps client performance smooth and prevents lag. Default: 40.
+  max-particles-per-tick: 40
+
+# Event stage duration settings (in seconds).
+stages:
+  # Duration of the Omen (warning) stage before atmospheric entry begins.
+  # Default: 12 seconds.
+  omen-duration-seconds: 12
+
+  # Default exploration duration (in seconds) during which the core/chest remains open.
+  # Can be overridden per meteor type in meteors.yml. Default: 180 seconds.
+  default-exploration-seconds: 180
