@@ -80,7 +80,7 @@ public final class MeteorListener implements Listener {
                     && nearEvent.getChestLocation().getBlockZ() == block.getZ();
 
             boolean isCore = nearEvent.getCoreLocation() != null
-                    && block.getLocation().distanceSquared(nearEvent.getCoreLocation()) <= 5.0;
+                    && block.getLocation().distanceSquared(nearEvent.getCoreLocation()) <= 1.8;
 
             if (isChest || isCore) {
                 event.setCancelled(true);
@@ -140,8 +140,6 @@ public final class MeteorListener implements Listener {
 
             double distSq = to.distanceSquared(impact);
             if (distSq <= viewDistSq && from.distanceSquared(impact) > viewDistSq) {
-                visualManager.sendFakeBlocksToPlayer(event.getPlayer(), active.getFakeBlocks());
-
                 if (active.getCoreLocation() != null) {
                     List<String> lines;
                     if (active.getStage() == ActiveMeteorEvent.Stage.POST_LOOT_VANISHING) {

@@ -6,6 +6,7 @@ import com.meteorevents.config.MeteorType;
 import com.meteorevents.config.ProtectionSettings;
 import com.meteorevents.config.RewardTable;
 import com.meteorevents.crater.CraterEngine;
+import com.meteorevents.crater.CraterRollback;
 import com.meteorevents.loot.LootManager;
 import com.meteorevents.packet.PacketVisualManager;
 import org.bukkit.Bukkit;
@@ -54,7 +55,7 @@ public final class ActiveMeteorEvent {
     private int coreEntityId = -1;
     private Location chestLocation;
     private Location coreLocation;
-    private final Map<Location, BlockData> fakeBlocks = new ConcurrentHashMap<>();
+    private final CraterRollback rollback = new CraterRollback();
     private final Set<Location> fragmentLocations = Collections.synchronizedSet(new HashSet<>());
     private final AtomicBoolean claimed = new AtomicBoolean(false);
 
@@ -184,14 +185,11 @@ public final class ActiveMeteorEvent {
 
         Schedulers.runAt(plugin, impactLocation, () -> {
             ProtectionSettings protections = configManager.getProtections();
-            CraterEngine.CraterResult result = craterEngine.generateCrater(impactLocation, type, protections);
+            CraterEngine.CraterResult result = craterEngine.generateCrater(impactLocation, type, protections, rollback);
 
             chestLocation = result.getChestLocation();
             coreLocation = result.getCoreLocation();
-            fakeBlocks.putAll(result.getFakeBlocks());
             fragmentLocations.addAll(result.getFragmentLocations());
-
-            visualManager.broadcastFakeBlocks(impactLocation, fakeBlocks, viewDist);
 
             coreEntityId = visualManager.spawnVisualEntity(id, coreLocation, "END_CRYSTAL", viewDist);
 
@@ -338,11 +336,8 @@ public final class ActiveMeteorEvent {
                 && fLoc.getBlockX() == loc.getBlockX()
                 && fLoc.getBlockY() == loc.getBlockY()
                 && fLoc.getBlockZ() == loc.getBlockZ());
-        fakeBlocks.remove(loc);
         if (loc.getWorld() != null) {
-            for (Player player : loc.getWorld().getPlayers()) {
-                player.sendBlockChange(loc, loc.getBlock().getBlockData());
-            }
+            loc.getBlock().setType(Material.AIR, false);
         }
     }
 
@@ -353,10 +348,7 @@ public final class ActiveMeteorEvent {
         int viewDist = configManager.getViewDistance();
         visualManager.cleanupEvent(id, impactLocation, viewDist);
 
-        if (!fakeBlocks.isEmpty()) {
-            visualManager.broadcastRestoreFakeBlocks(impactLocation, fakeBlocks.keySet(), viewDist);
-            fakeBlocks.clear();
-        }
+        rollback.executeRollback(plugin, true);
 
         visualManager.playLocalizedSound(impactLocation, "ENTITY_GENERIC_EXTINGUISH_FIRE", 4.0f, 0.8f);
         broadcastMessage("announcements.ended-chat");
@@ -447,7 +439,7 @@ public final class ActiveMeteorEvent {
     }
 
     public Map<Location, BlockData> getFakeBlocks() {
-        return fakeBlocks;
+        return Collections.emptyMap();
     }
 
     public boolean isSafeTestMode() {
