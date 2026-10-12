@@ -32,6 +32,9 @@ announcements:
 
 # Rewards and interaction messages.
 rewards:
+  # Title displayed on the loot inventory menu.
+  chest-title: "&6&lMeteor Loot - {meteor}"
+
   # Message when a player successfully claims the core chest.
   core-claimed-broadcast: "&aPlayer &f{player}&a claimed the rewards of the &f{meteor}&a core at &e{x}, {z}&a!"
   core-claimed-player: "&aYou have successfully unlocked the &f{meteor}&a core!"

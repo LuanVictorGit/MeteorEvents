@@ -49,6 +49,23 @@ public final class LootManager {
         return rolled;
     }
 
+    public Inventory createLootInventory(String title, RewardTable table) {
+        List<ItemStack> items = rollRewards(table);
+        int size = items.size() > 27 ? 54 : 27;
+        Inventory inv = Bukkit.createInventory(null, size, title != null ? title : "Meteor Loot");
+
+        List<Integer> slots = new ArrayList<>();
+        for (int i = 0; i < inv.getSize(); i++) {
+            slots.add(i);
+        }
+        Collections.shuffle(slots, random);
+
+        for (int i = 0; i < items.size() && i < slots.size(); i++) {
+            inv.setItem(slots.get(i), items.get(i));
+        }
+        return inv;
+    }
+
     public void populateChest(Block block, RewardTable table) {
         if (block == null) return;
         block.setType(Material.CHEST, false);

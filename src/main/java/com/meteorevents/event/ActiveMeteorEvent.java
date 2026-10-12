@@ -10,11 +10,15 @@ import com.meteorevents.crater.CraterRollback;
 import com.meteorevents.loot.LootManager;
 import com.meteorevents.packet.PacketVisualManager;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Chest;
 import org.bukkit.block.data.BlockData;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
@@ -58,6 +62,7 @@ public final class ActiveMeteorEvent {
     private final CraterRollback rollback = new CraterRollback();
     private final Set<Location> fragmentLocations = Collections.synchronizedSet(new HashSet<>());
     private final AtomicBoolean claimed = new AtomicBoolean(false);
+    private Inventory lootInventory;
 
     private int omenSecondsRemaining;
     private int explorationSecondsRemaining;
@@ -191,6 +196,26 @@ public final class ActiveMeteorEvent {
             coreLocation = result.getCoreLocation();
             fragmentLocations.addAll(result.getFragmentLocations());
 
+            RewardTable table = configManager.getRewardTable(type.getRewardTable());
+            String titleTemplate = configManager.getMessage("rewards.chest-title");
+            if (titleTemplate == null || titleTemplate.isEmpty()) {
+                titleTemplate = "&6&lMeteor Loot - {meteor}";
+            }
+            String menuTitle = ChatColor.translateAlternateColorCodes('&',
+                    titleTemplate.replace("{meteor}", type.getDisplayName()).replace("{type}", type.getId()));
+
+            if (chestLocation != null && chestLocation.getBlock().getState() instanceof Chest) {
+                lootManager.populateChest(chestLocation.getBlock(), table);
+                Chest chestState = (Chest) chestLocation.getBlock().getState();
+                try {
+                    chestState.setCustomName(menuTitle);
+                    chestState.update(true);
+                } catch (Throwable ignored) {}
+                lootInventory = chestState.getBlockInventory();
+            } else {
+                lootInventory = lootManager.createLootInventory(menuTitle, table);
+            }
+
             coreEntityId = visualManager.spawnVisualEntity(id, coreLocation, "END_CRYSTAL", viewDist);
 
             spawnInitialHologram();
@@ -272,9 +297,16 @@ public final class ActiveMeteorEvent {
     }
 
     public boolean claimCore(Player player) {
-        if (stage == Stage.POST_LOOT_VANISHING || claimed.get()) {
-            player.sendMessage(configManager.getMessage("prefix") + "§7Este núcleo já foi saqueado! O cenário irá se desestabilizar em breve.");
-            return false;
+        if (stage == Stage.POST_LOOT_VANISHING) {
+            if (lootInventory != null) {
+                Schedulers.runLaterAt(plugin, player.getLocation(), 1L, () -> {
+                    if (player.isOnline()) {
+                        player.openInventory(lootInventory);
+                    }
+                });
+                visualManager.playLocalizedSound(coreLocation != null ? coreLocation : impactLocation, "BLOCK_CHEST_OPEN", 1.5f, 1.0f);
+            }
+            return true;
         }
 
         if (stage != Stage.EXPLORATION) {
@@ -309,20 +341,17 @@ public final class ActiveMeteorEvent {
         }
 
         if (!claimed.compareAndSet(false, true)) {
-            return false;
+            if (lootInventory != null) {
+                Schedulers.runLaterAt(plugin, player.getLocation(), 1L, () -> {
+                    if (player.isOnline()) {
+                        player.openInventory(lootInventory);
+                    }
+                });
+            }
+            return true;
         }
 
         RewardTable table = configManager.getRewardTable(type.getRewardTable());
-        List<ItemStack> rewards = lootManager.rollRewards(table);
-        for (ItemStack item : rewards) {
-            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(item);
-            if (!leftover.isEmpty() && player.getLocation().getWorld() != null) {
-                for (ItemStack drop : leftover.values()) {
-                    player.getLocation().getWorld().dropItemNaturally(player.getLocation(), drop);
-                }
-            }
-        }
-
         lootManager.executeRewardCommands(table, player);
 
         Map<String, String> ph = getPlaceholders();
@@ -347,6 +376,14 @@ public final class ActiveMeteorEvent {
 
         stage = Stage.POST_LOOT_VANISHING;
         updateVanishingHologram();
+
+        if (lootInventory != null) {
+            Schedulers.runLaterAt(plugin, player.getLocation(), 1L, () -> {
+                if (player.isOnline()) {
+                    player.openInventory(lootInventory);
+                }
+            });
+        }
 
         return true;
     }
@@ -378,6 +415,12 @@ public final class ActiveMeteorEvent {
         if (stage == Stage.COMPLETED) return;
         stage = Stage.COMPLETED;
 
+        if (lootInventory != null) {
+            for (HumanEntity viewer : new ArrayList<>(lootInventory.getViewers())) {
+                viewer.closeInventory();
+            }
+        }
+
         int viewDist = configManager.getViewDistance();
         visualManager.cleanupEvent(id, impactLocation, viewDist);
 
@@ -385,6 +428,10 @@ public final class ActiveMeteorEvent {
 
         visualManager.playLocalizedSound(impactLocation, "ENTITY_GENERIC_EXTINGUISH_FIRE", 4.0f, 0.8f);
         broadcastMessage("announcements.ended-chat");
+    }
+
+    public Inventory getLootInventory() {
+        return lootInventory;
     }
 
     private void broadcastOmen() {
