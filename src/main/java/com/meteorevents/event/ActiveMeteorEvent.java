@@ -6,18 +6,20 @@ import com.meteorevents.config.MeteorType;
 import com.meteorevents.config.ProtectionSettings;
 import com.meteorevents.config.RewardTable;
 import com.meteorevents.crater.CraterEngine;
-import com.meteorevents.crater.CraterRollback;
 import com.meteorevents.loot.LootManager;
 import com.meteorevents.packet.PacketVisualManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class ActiveMeteorEvent {
@@ -27,6 +29,7 @@ public final class ActiveMeteorEvent {
         CROSSING,
         IMPACT,
         EXPLORATION,
+        POST_LOOT_VANISHING,
         COMPLETED
     }
 
@@ -51,13 +54,14 @@ public final class ActiveMeteorEvent {
     private int coreEntityId = -1;
     private Location chestLocation;
     private Location coreLocation;
+    private final Map<Location, BlockData> fakeBlocks = new ConcurrentHashMap<>();
     private final Set<Location> fragmentLocations = Collections.synchronizedSet(new HashSet<>());
     private final AtomicBoolean claimed = new AtomicBoolean(false);
-    private final CraterRollback rollback = new CraterRollback();
 
     private int omenSecondsRemaining;
     private int explorationSecondsRemaining;
     private int lockSecondsRemaining;
+    private int vanishSecondsRemaining;
 
     public ActiveMeteorEvent(Plugin plugin, ConfigManager configManager, PacketVisualManager visualManager,
                              CraterEngine craterEngine, LootManager lootManager, MeteorType type,
@@ -73,7 +77,8 @@ public final class ActiveMeteorEvent {
 
         this.omenSecondsRemaining = configManager.getOmenDurationSeconds();
         this.explorationSecondsRemaining = type.getExplorationDurationSeconds();
-        this.lockSecondsRemaining = type.getLockDurationSeconds();
+        this.lockSecondsRemaining = type.getLockDurationSeconds() > 0 ? type.getLockDurationSeconds() : configManager.getCoreLockSeconds();
+        this.vanishSecondsRemaining = configManager.getPostLootVanishSeconds();
 
         initTrajectory();
     }
@@ -87,8 +92,8 @@ public final class ActiveMeteorEvent {
         currentLocation = startLocation.clone();
 
         double dist = startLocation.distance(impactLocation);
-        double speed = Math.max(0.2, type.getSpeed());
-        flightTotalTicks = Math.max(5, (int) Math.round(dist / speed));
+        double speed = Math.max(0.4, type.getSpeed());
+        flightTotalTicks = Math.max(20, (int) Math.round(dist / speed));
 
         stepVector = impactLocation.toVector().subtract(startLocation.toVector()).multiply(1.0 / flightTotalTicks);
     }
@@ -98,6 +103,8 @@ public final class ActiveMeteorEvent {
     }
 
     public void tickSecond() {
+        int viewDist = configManager.getViewDistance();
+
         if (stage == Stage.OMEN) {
             omenSecondsRemaining--;
             if (omenSecondsRemaining <= 0) {
@@ -105,18 +112,37 @@ public final class ActiveMeteorEvent {
             }
         } else if (stage == Stage.EXPLORATION) {
             explorationSecondsRemaining--;
+
             if (lockSecondsRemaining > 0) {
                 lockSecondsRemaining--;
+                updateCooldownHologram();
+
+                if (coreLocation != null) {
+                    visualManager.broadcastParticles(coreLocation, Collections.singletonList("CAMPFIRE_COSY_SMOKE"), 2, 0.2, 0.2, 0.2, 0.01, viewDist);
+                }
+
+                if (lockSecondsRemaining == 0) {
+                    onCooldownFinished();
+                }
+            } else {
+                if (coreLocation != null) {
+                    visualManager.broadcastParticles(coreLocation, Collections.singletonList("FIREWORKS_SPARK"), 3, 0.3, 0.3, 0.3, 0.02, viewDist);
+                }
             }
 
-            if (explorationSecondsRemaining == 30) {
-                broadcastMessage("announcements.despawn-warning");
-            }
-
-            if (explorationSecondsRemaining <= 0) {
+            if (explorationSecondsRemaining <= 0 && !claimed.get()) {
                 finishEvent();
-            } else if (coreLocation != null) {
-                visualManager.broadcastParticles(coreLocation, type.getTrailParticles(), 3, 0.3, 0.3, 0.3, 0.02, configManager.getViewDistance());
+            }
+        } else if (stage == Stage.POST_LOOT_VANISHING) {
+            vanishSecondsRemaining--;
+            updateVanishingHologram();
+
+            if (coreLocation != null) {
+                visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_LARGE"), 4, 0.4, 0.4, 0.4, 0.02, viewDist);
+            }
+
+            if (vanishSecondsRemaining <= 0) {
+                finishEvent();
             }
         }
     }
@@ -129,12 +155,9 @@ public final class ActiveMeteorEvent {
 
         int viewDist = configManager.getViewDistance();
         visualManager.teleportVisualEntity(meteorEntityId, currentLocation, viewDist);
-        visualManager.broadcastParticles(currentLocation, type.getTrailParticles(),
-                configManager.getMaxParticlesPerTick(), 0.3, 0.3, 0.3, 0.05, viewDist);
 
-        if (flightCurrentTick % 10 == 0) {
-            visualManager.broadcastSound(currentLocation, type.getCrossingSound(), 2.0f, 1.0f, viewDist);
-        }
+        visualManager.renderCinematicFlight(currentLocation, stepVector, type.getTrailParticles(),
+                configManager.getMaxParticlesPerTick(), flightCurrentTick, viewDist);
 
         if (flightCurrentTick >= flightTotalTicks) {
             triggerImpact();
@@ -147,7 +170,7 @@ public final class ActiveMeteorEvent {
 
         int viewDist = configManager.getViewDistance();
         meteorEntityId = visualManager.spawnVisualEntity(id, currentLocation, type.getVisualEntity(), viewDist);
-        visualManager.broadcastSound(currentLocation, type.getCrossingSound(), 3.0f, 1.0f, viewDist);
+        visualManager.playLocalizedSound(currentLocation, type.getCrossingSound(), 16.0f, 0.6f);
     }
 
     private void triggerImpact() {
@@ -155,34 +178,24 @@ public final class ActiveMeteorEvent {
 
         int viewDist = configManager.getViewDistance();
         visualManager.destroyVisualEntity(id, meteorEntityId, currentLocation, viewDist);
-        visualManager.broadcastSound(impactLocation, type.getImpactSound(), type.getImpactSoundVolume(), type.getImpactSoundPitch(), viewDist);
+        visualManager.playLocalizedSound(impactLocation, type.getImpactSound(), 16.0f, type.getImpactSoundPitch());
 
         spawnImpactShockwave();
 
         Schedulers.runAt(plugin, impactLocation, () -> {
             ProtectionSettings protections = configManager.getProtections();
-            CraterEngine.CraterResult result;
-
-            if (safeTestMode) {
-                ProtectionSettings safeProtections = new ProtectionSettings(
-                        false, false, 0, false, false, false,
-                        Collections.emptyList(), false, 0.0, 0.0, false, false, Collections.emptyList()
-                );
-                result = craterEngine.generateCrater(impactLocation, type, safeProtections, rollback);
-            } else {
-                result = craterEngine.generateCrater(impactLocation, type, protections, rollback);
-            }
+            CraterEngine.CraterResult result = craterEngine.generateCrater(impactLocation, type, protections);
 
             chestLocation = result.getChestLocation();
             coreLocation = result.getCoreLocation();
+            fakeBlocks.putAll(result.getFakeBlocks());
             fragmentLocations.addAll(result.getFragmentLocations());
 
-            RewardTable table = configManager.getRewardTable(type.getRewardTable());
-            if (chestLocation != null && chestLocation.getBlock() != null) {
-                lootManager.populateChest(chestLocation.getBlock(), table);
-            }
+            visualManager.broadcastFakeBlocks(impactLocation, fakeBlocks, viewDist);
 
             coreEntityId = visualManager.spawnVisualEntity(id, coreLocation, "END_CRYSTAL", viewDist);
+
+            spawnInitialHologram();
 
             lootManager.awardParticipation(impactLocation);
             broadcastImpact();
@@ -194,8 +207,49 @@ public final class ActiveMeteorEvent {
     private void spawnImpactShockwave() {
         int viewDist = configManager.getViewDistance();
         int count = type.getImpactParticlesCount();
-        visualManager.broadcastParticles(impactLocation, Collections.singletonList("EXPLOSION_HUGE"), 3, 0.5, 0.5, 0.5, 0.1, viewDist);
-        visualManager.broadcastParticles(impactLocation, type.getTrailParticles(), count, 2.5, 1.5, 2.5, 0.3, viewDist);
+        visualManager.broadcastParticles(impactLocation, Collections.singletonList("EXPLOSION_HUGE"), 5, 0.8, 0.8, 0.8, 0.1, viewDist);
+        visualManager.broadcastParticles(impactLocation, type.getTrailParticles(), count, 3.5, 2.0, 3.5, 0.35, viewDist);
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_GENERIC_EXPLODE", 16.0f, 0.7f);
+    }
+
+    private void spawnInitialHologram() {
+        if (coreLocation == null) return;
+        List<String> lines = Arrays.asList(
+                "&6&l✦ " + type.getDisplayName() + " &6&l✦",
+                "&c⏳ Cooling down: &e" + lockSecondsRemaining + "s"
+        );
+        visualManager.spawnHologram(id, coreLocation.clone().add(0, 0.8, 0), lines, configManager.getViewDistance());
+    }
+
+    private void updateCooldownHologram() {
+        if (coreLocation == null) return;
+        List<String> lines = Arrays.asList(
+                "&6&l✦ " + type.getDisplayName() + " &6&l✦",
+                "&c⏳ Cooling down: &e" + lockSecondsRemaining + "s"
+        );
+        visualManager.updateHologram(id, coreLocation.clone().add(0, 0.8, 0), lines, configManager.getViewDistance());
+    }
+
+    private void onCooldownFinished() {
+        if (coreLocation == null) return;
+        List<String> lines = Arrays.asList(
+                "&a&l✦ " + type.getDisplayName() + " &a&l✦",
+                "&a&l✔ UNLOCKED! &e[Right-Click to Loot]"
+        );
+        visualManager.updateHologram(id, coreLocation.clone().add(0, 0.8, 0), lines, configManager.getViewDistance());
+
+        visualManager.broadcastParticles(coreLocation, Collections.singletonList("FIREWORKS_SPARK"), 35, 0.6, 0.6, 0.6, 0.08, configManager.getViewDistance());
+        visualManager.playLocalizedSound(coreLocation, "BLOCK_BEACON_ACTIVATE", 6.0f, 1.2f);
+        visualManager.playLocalizedSound(coreLocation, "ENTITY_PLAYER_LEVELUP", 6.0f, 1.4f);
+    }
+
+    private void updateVanishingHologram() {
+        if (coreLocation == null) return;
+        List<String> lines = Arrays.asList(
+                "&7✦ Remnants Destabilizing ✦",
+                "&7⏳ Vanishing in: &e" + vanishSecondsRemaining + "s"
+        );
+        visualManager.updateHologram(id, coreLocation.clone().add(0, 0.8, 0), lines, configManager.getViewDistance());
     }
 
     public boolean claimCore(Player player) {
@@ -207,6 +261,10 @@ public final class ActiveMeteorEvent {
             Map<String, String> ph = new HashMap<>();
             ph.put("time", String.valueOf(lockSecondsRemaining));
             player.sendMessage(configManager.getFormatted("rewards.core-locked", ph));
+            visualManager.playLocalizedSound(coreLocation != null ? coreLocation : impactLocation, "BLOCK_LAVA_EXTINGUISH", 2.0f, 1.0f);
+            if (coreLocation != null) {
+                visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_NORMAL"), 8, 0.3, 0.3, 0.3, 0.05, configManager.getViewDistance());
+            }
             return false;
         }
 
@@ -225,6 +283,16 @@ public final class ActiveMeteorEvent {
         }
 
         RewardTable table = configManager.getRewardTable(type.getRewardTable());
+        List<ItemStack> rewards = lootManager.rollRewards(table);
+        for (ItemStack item : rewards) {
+            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(item);
+            if (!leftover.isEmpty() && player.getLocation().getWorld() != null) {
+                for (ItemStack drop : leftover.values()) {
+                    player.getLocation().getWorld().dropItemNaturally(player.getLocation(), drop);
+                }
+            }
+        }
+
         lootManager.executeRewardCommands(table, player);
 
         Map<String, String> ph = getPlaceholders();
@@ -241,12 +309,13 @@ public final class ActiveMeteorEvent {
         }
 
         int viewDist = configManager.getViewDistance();
-        if (coreEntityId != -1) {
-            visualManager.destroyVisualEntity(id, coreEntityId, coreLocation, viewDist);
-            coreEntityId = -1;
+        if (coreLocation != null) {
+            visualManager.broadcastParticles(coreLocation, Collections.singletonList("FIREWORKS_SPARK"), 60, 0.6, 0.6, 0.6, 0.12, viewDist);
+            visualManager.playLocalizedSound(coreLocation, "UI_TOAST_CHALLENGE_COMPLETE", 6.0f, 1.0f);
         }
-        visualManager.broadcastParticles(coreLocation, Collections.singletonList("FIREWORKS_SPARK"), 50, 0.5, 0.5, 0.5, 0.1, viewDist);
-        visualManager.broadcastSound(coreLocation, "ENTITY_PLAYER_LEVELUP", 1.5f, 1.2f, viewDist);
+
+        stage = Stage.POST_LOOT_VANISHING;
+        updateVanishingHologram();
 
         return true;
     }
@@ -269,6 +338,12 @@ public final class ActiveMeteorEvent {
                 && fLoc.getBlockX() == loc.getBlockX()
                 && fLoc.getBlockY() == loc.getBlockY()
                 && fLoc.getBlockZ() == loc.getBlockZ());
+        fakeBlocks.remove(loc);
+        if (loc.getWorld() != null) {
+            for (Player player : loc.getWorld().getPlayers()) {
+                player.sendBlockChange(loc, loc.getBlock().getBlockData());
+            }
+        }
     }
 
     public void finishEvent() {
@@ -278,19 +353,13 @@ public final class ActiveMeteorEvent {
         int viewDist = configManager.getViewDistance();
         visualManager.cleanupEvent(id, impactLocation, viewDist);
 
-        if (type.isUnstableCore() && !claimed.get() && coreLocation != null) {
-            visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_LARGE"), 40, 0.5, 0.5, 0.5, 0.1, viewDist);
-            visualManager.broadcastSound(coreLocation, "ENTITY_GENERIC_EXTINGUISH_FIRE", 2.0f, 0.8f, viewDist);
+        if (!fakeBlocks.isEmpty()) {
+            visualManager.broadcastRestoreFakeBlocks(impactLocation, fakeBlocks.keySet(), viewDist);
+            fakeBlocks.clear();
         }
 
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_GENERIC_EXTINGUISH_FIRE", 4.0f, 0.8f);
         broadcastMessage("announcements.ended-chat");
-
-        ProtectionSettings protections = configManager.getProtections();
-        if (!safeTestMode && protections.isEnableRollback() && rollback.getRecords().size() > 0) {
-            Schedulers.runLaterAt(plugin, impactLocation, protections.getRollbackDelaySeconds() * 20L, () -> {
-                rollback.executeRollback(plugin, protections.isPreservePlayerModifications());
-            });
-        }
     }
 
     private void broadcastOmen() {
@@ -303,8 +372,8 @@ public final class ActiveMeteorEvent {
 
         for (Player p : world.getPlayers()) {
             p.sendTitle(title, sub, 10, 50, 10);
-            p.playSound(p.getLocation(), PacketVisualManager.parseSound("ENTITY_LIGHTNING_BOLT_THUNDER"), 0.8f, 0.5f);
         }
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_LIGHTNING_BOLT_THUNDER", 16.0f, 0.5f);
     }
 
     private void broadcastCrossing() {
@@ -349,7 +418,7 @@ public final class ActiveMeteorEvent {
         ph.put("y", String.valueOf(impactLocation.getBlockY()));
         ph.put("z", String.valueOf(impactLocation.getBlockZ()));
         ph.put("stage", stage.name());
-        ph.put("time", String.valueOf(Math.max(0, explorationSecondsRemaining)));
+        ph.put("time", String.valueOf(Math.max(0, stage == Stage.POST_LOOT_VANISHING ? vanishSecondsRemaining : (lockSecondsRemaining > 0 ? lockSecondsRemaining : explorationSecondsRemaining))));
         return ph;
     }
 
@@ -377,12 +446,24 @@ public final class ActiveMeteorEvent {
         return coreLocation;
     }
 
+    public Map<Location, BlockData> getFakeBlocks() {
+        return fakeBlocks;
+    }
+
     public boolean isSafeTestMode() {
         return safeTestMode;
     }
 
     public int getExplorationSecondsRemaining() {
         return explorationSecondsRemaining;
+    }
+
+    public int getLockSecondsRemaining() {
+        return lockSecondsRemaining;
+    }
+
+    public int getVanishSecondsRemaining() {
+        return vanishSecondsRemaining;
     }
 
     private Material parseMaterial(String name) {

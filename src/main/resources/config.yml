@@ -63,9 +63,9 @@ location:
 # Performance and visual packet tuning.
 performance:
   # Maximum distance in blocks from the meteor for players to receive visual packets.
-  # Players farther than this distance will not receive entity or particle packets.
-  # Valid range: 32 - 256 blocks. Default: 128.
-  view-distance: 128
+  # Players within this radius will see the high-altitude meteor descent and crater packets.
+  # Valid range: 64 - 512 blocks. Default: 256.
+  view-distance: 256
 
   # Tick interval for trajectory and particle packet updates.
   # 1 = every tick (smoothest), 2 = every 2 ticks (reduced packet load).
@@ -73,15 +73,25 @@ performance:
   update-rate-ticks: 1
 
   # Maximum number of trail particles spawned per tick per active meteor.
-  # Keeps client performance smooth and prevents lag. Default: 40.
-  max-particles-per-tick: 40
+  # Keeps client performance smooth and prevents lag. Default: 80.
+  max-particles-per-tick: 80
 
 # Event stage duration settings (in seconds).
 stages:
   # Duration of the Omen (warning) stage before atmospheric entry begins.
-  # Default: 12 seconds.
-  omen-duration-seconds: 12
+  # Default: 10 seconds.
+  omen-duration-seconds: 10
 
-  # Default exploration duration (in seconds) during which the core/chest remains open.
-  # Can be overridden per meteor type in meteors.yml. Default: 180 seconds.
+  # Default cooldown in seconds players must wait after impact before looting the core.
+  # A dynamic countdown hologram displays the remaining time above the core.
+  # Default: 30 seconds.
+  core-lock-seconds: 30
+
+  # Time in seconds after the core is looted before the virtual packet crater disappears.
+  # Because the crater is purely virtual packets, all blocks smoothly vanish.
+  # Default: 30 seconds.
+  post-loot-vanish-seconds: 30
+
+  # Default exploration duration (in seconds) during which the core remains available if unlooted.
+  # Default: 180 seconds.
   default-exploration-seconds: 180

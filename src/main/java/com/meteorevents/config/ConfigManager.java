@@ -32,7 +32,9 @@ public final class ConfigManager {
     private int updateRateTicks = 1;
     private int maxParticlesPerTick = 40;
 
-    private int omenDurationSeconds = 12;
+    private int omenDurationSeconds = 10;
+    private int coreLockSeconds = 30;
+    private int postLootVanishSeconds = 30;
     private int defaultExplorationSeconds = 180;
 
     private boolean participationRewardsEnabled = true;
@@ -94,11 +96,13 @@ public final class ConfigManager {
         playerOffsetMax = Math.max(playerOffsetMin + 20, cfg.getInt("location.player-offset-max", 300));
         avoidWater = cfg.getBoolean("location.avoid-water", true);
 
-        viewDistance = Math.max(32, Math.min(256, cfg.getInt("performance.view-distance", 128)));
+        viewDistance = Math.max(64, Math.min(512, cfg.getInt("performance.view-distance", 256)));
         updateRateTicks = Math.max(1, cfg.getInt("performance.update-rate-ticks", 1));
-        maxParticlesPerTick = Math.max(5, cfg.getInt("performance.max-particles-per-tick", 40));
+        maxParticlesPerTick = Math.max(10, cfg.getInt("performance.max-particles-per-tick", 80));
 
-        omenDurationSeconds = Math.max(3, cfg.getInt("stages.omen-duration-seconds", 12));
+        omenDurationSeconds = Math.max(3, cfg.getInt("stages.omen-duration-seconds", 10));
+        coreLockSeconds = Math.max(0, cfg.getInt("stages.core-lock-seconds", 30));
+        postLootVanishSeconds = Math.max(5, cfg.getInt("stages.post-loot-vanish-seconds", 30));
         defaultExplorationSeconds = Math.max(30, cfg.getInt("stages.default-exploration-seconds", 180));
     }
 
@@ -352,6 +356,14 @@ public final class ConfigManager {
 
     public int getOmenDurationSeconds() {
         return omenDurationSeconds;
+    }
+
+    public int getCoreLockSeconds() {
+        return coreLockSeconds;
+    }
+
+    public int getPostLootVanishSeconds() {
+        return postLootVanishSeconds;
     }
 
     public int getDefaultExplorationSeconds() {

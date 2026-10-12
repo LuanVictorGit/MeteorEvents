@@ -43,7 +43,7 @@ public final class MeteorEventsPlugin extends JavaPlugin {
         eventManager = new MeteorEventManager(this, configManager, visualManager, craterEngine, lootManager);
         eventManager.start();
 
-        getServer().getPluginManager().registerEvents(new MeteorListener(eventManager, configManager, lootManager), this);
+        getServer().getPluginManager().registerEvents(new MeteorListener(eventManager, configManager, lootManager, visualManager), this);
 
         MeteorCommand commandExecutor = new MeteorCommand(eventManager, configManager);
         PluginCommand cmd = getCommand("meteorevents");

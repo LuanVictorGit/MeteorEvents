@@ -7,19 +7,20 @@
 <hr>
 
 <h3>Overview</h3>
-<p><strong>MeteorEvents</strong> brings celestial excitement to survival and RPG servers. Rather than instantaneous explosions, meteors traverse the sky along configurable atmospheric trajectories using <strong>PacketEvents</strong>, creating immersive visuals without bloating server entity counts. Once grounded, procedural craters form around interactive cores and chests loaded with customized rewards, followed by automatic rollback to keep player terrain clean.</p>
+<p><strong>MeteorEvents</strong> brings celestial excitement to survival and RPG servers. Rather than instantaneous explosions, meteors traverse the sky along configurable atmospheric trajectories using <strong>PacketEvents</strong>, creating immersive visuals from heights of over 200 blocks visible from far across the world. Impact craters are rendered purely client-side via fake packet blocks, guaranteeing that real world blocks are never damaged. An interactive cooldown hologram requires players to wait before looting the core, and once claimed, the fake destroyed scenery destabilizes and cleanly vanishes after 30 seconds.</p>
 
 <hr>
 
 <h3>Key Features</h3>
 <ul>
-<li><strong>Cinematic 5-Stage Lifecycle:</strong> Omen announcements, atmospheric crossing, explosive impact, interactive exploration, and clean rollback.</li>
-<li><strong>PacketEvents-Driven Visuals:</strong> Meteor heads and floating cores are rendered via client-side packets, minimizing tick lag and entity counts.</li>
+<li><strong>Cinematic 5-Stage Lifecycle:</strong> Omen announcements, atmospheric crossing, explosive impact, interactive exploration with cooldown, and vanishing fake scenery.</li>
+<li><strong>100% Virtual Packet Craters:</strong> Impact craters and destroyed terrain are sent as client-side fake blocks via packets. Real server blocks are never altered, eliminating map corruption and griefing risks.</li>
+<li><strong>Interactive Cooldown Hologram:</strong> Meteor cores remain locked during an initial cooling period (default 30 seconds), displaying a live packet countdown hologram that updates every second before unlocking.</li>
+<li><strong>30s Post-Loot Vanishing Scenery:</strong> After looting the core, the unstable fake crater scenery cleanly destabilizes and vanishes after 30 seconds, restoring the original landscape via packets.</li>
+<li><strong>High-Altitude Cinematic Trajectories:</strong> Multi-layer particle streams (dense core, rotating double-helix trail, sonic smoke cone, and sparks) visible up to 256+ blocks away from altitudes of 160 to 240 blocks.</li>
+<li><strong>3D Localized Spatial Audio:</strong> Sounds originate realistically from the meteor's exact 3D coordinates in the sky and on the ground with natural distance attenuation, rather than artificial global playback.</li>
 <li><strong>Custom Meteor Types:</strong> Built-in configurations for Ember, Frostfall, Voidfall, and Worldbreaker, plus full support for custom YAML definitions.</li>
-<li><strong>Procedural Craters:</strong> Carves realistic impact basins lined with thematic materials and placed fragment nodes.</li>
-<li><strong>Safe Terrain Rollback:</strong> Restores terrain after exploration ends, intelligently preserving blocks modified by players in the meantime.</li>
 <li><strong>Extensive Loot System:</strong> Chests with weighted item rolls, enchantments, custom names, lore, console commands, and collectible fragments.</li>
-<li><strong>Interactive Core Mechanics:</strong> Supports direct claiming, timed cooldowns (cooling off), or key-based unlocks.</li>
 <li><strong>Folia & Paper Native:</strong> Built from the ground up to respect Folia threaded region scheduling alongside Spigot and Paper.</li>
 <li><strong>WorldGuard Support:</strong> Automatically checks regions to prevent meteor strikes in protected plots and towns.</li>
 </ul>

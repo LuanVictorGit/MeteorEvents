@@ -5,7 +5,7 @@ import com.meteorevents.config.ProtectionSettings;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.util.Vector;
@@ -18,11 +18,13 @@ public final class CraterEngine {
         private final Location coreLocation;
         private final Location chestLocation;
         private final List<Location> fragmentLocations;
+        private final Map<Location, BlockData> fakeBlocks;
 
-        public CraterResult(Location coreLocation, Location chestLocation, List<Location> fragmentLocations) {
+        public CraterResult(Location coreLocation, Location chestLocation, List<Location> fragmentLocations, Map<Location, BlockData> fakeBlocks) {
             this.coreLocation = coreLocation;
             this.chestLocation = chestLocation;
             this.fragmentLocations = fragmentLocations != null ? fragmentLocations : Collections.emptyList();
+            this.fakeBlocks = fakeBlocks != null ? fakeBlocks : Collections.emptyMap();
         }
 
         public Location getCoreLocation() {
@@ -36,119 +38,93 @@ public final class CraterEngine {
         public List<Location> getFragmentLocations() {
             return fragmentLocations;
         }
+
+        public Map<Location, BlockData> getFakeBlocks() {
+            return fakeBlocks;
+        }
     }
 
     private final Random random = new Random();
 
-    public CraterResult generateCrater(Location center, MeteorType type, ProtectionSettings protections, CraterRollback rollback) {
+    public CraterResult generateCrater(Location center, MeteorType type, ProtectionSettings protections) {
         World world = center.getWorld();
         if (world == null) {
-            return new CraterResult(center, center, Collections.emptyList());
+            return new CraterResult(center, center, Collections.emptyList(), Collections.emptyMap());
         }
 
         int radius = type.getCraterRadius();
         int depth = type.getCraterDepth();
-        boolean modifyBlocks = protections.isModifyBlocks() && radius > 0;
 
         List<Material> craterMaterials = parseMaterials(type.getCraterMaterials());
         if (craterMaterials.isEmpty()) {
             craterMaterials.add(Material.MAGMA_BLOCK);
         }
 
-        Set<Material> blacklist = new HashSet<>();
-        for (String b : protections.getBlacklistedBlocks()) {
-            try {
-                blacklist.add(Material.valueOf(b.toUpperCase(Locale.ROOT)));
-            } catch (IllegalArgumentException ignored) {}
-        }
-        blacklist.add(Material.BEDROCK);
-        blacklist.add(Material.BARRIER);
-
+        Map<Location, BlockData> fakeBlocks = new HashMap<>();
         List<Location> fragmentLocs = new ArrayList<>();
+
         Location chestLoc = center.clone().add(0, -Math.min(depth, 1), 0);
-        Location coreLoc = center.clone().add(0, 1, 0);
+        Location coreLoc = chestLoc.clone().add(0.5, 1.2, 0.5);
 
-        if (modifyBlocks) {
-            int cx = center.getBlockX();
-            int cy = center.getBlockY();
-            int cz = center.getBlockZ();
+        int cx = center.getBlockX();
+        int cy = center.getBlockY();
+        int cz = center.getBlockZ();
 
-            for (int x = -radius; x <= radius; x++) {
-                for (int z = -radius; z <= radius; z++) {
-                    double distSq = (double) (x * x + z * z);
-                    if (distSq > radius * radius) continue;
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                double distSq = (double) (x * x + z * z);
+                if (distSq > radius * radius) continue;
 
-                    double factor = 1.0 - (distSq / (radius * radius));
-                    int localDepth = (int) Math.round(depth * factor);
+                double factor = 1.0 - (distSq / (radius * radius));
+                int localDepth = (int) Math.round(depth * factor);
 
-                    for (int y = -localDepth; y <= 2; y++) {
-                        Block block = world.getBlockAt(cx + x, cy + y, cz + z);
-                        Material current = block.getType();
-
-                        if (blacklist.contains(current)) continue;
-                        if (!protections.isAffectFluids() && (current == Material.WATER || current == Material.LAVA)) continue;
-                        if (!protections.isAffectTreesAndFoliage() && isFoliage(current)) continue;
-
-                        if (y >= 0 && y <= 2) {
-                            if (current != Material.AIR) {
-                                rollback.addRecord(block.getLocation(), current, block.getBlockData(), Material.AIR);
-                                block.setType(Material.AIR, false);
-                            }
-                        } else if (y == -localDepth) {
-                            Material chosen = craterMaterials.get(random.nextInt(craterMaterials.size()));
-                            if (current != chosen) {
-                                rollback.addRecord(block.getLocation(), current, block.getBlockData(), chosen);
-                                block.setType(chosen, false);
-                            }
-                        } else {
-                            if (current != Material.AIR) {
-                                rollback.addRecord(block.getLocation(), current, block.getBlockData(), Material.AIR);
-                                block.setType(Material.AIR, false);
-                            }
-                        }
-                    }
-
-                    if (type.isCreateFire() && distSq >= (radius - 1) * (radius - 1) && random.nextDouble() < 0.3) {
-                        Block fireBlock = world.getBlockAt(cx + x, cy + 1, cz + z);
-                        if (fireBlock.getType() == Material.AIR && world.getBlockAt(cx + x, cy, cz + z).getType().isSolid()) {
-                            rollback.addRecord(fireBlock.getLocation(), Material.AIR, null, Material.FIRE);
-                            fireBlock.setType(Material.FIRE, false);
-                        }
+                for (int y = -localDepth; y <= 2; y++) {
+                    Location loc = new Location(world, cx + x, cy + y, cz + z);
+                    if (y >= 0 && y <= 2) {
+                        fakeBlocks.put(loc, Material.AIR.createBlockData());
+                    } else if (y == -localDepth) {
+                        Material chosen = craterMaterials.get(random.nextInt(craterMaterials.size()));
+                        fakeBlocks.put(loc, chosen.createBlockData());
+                    } else {
+                        fakeBlocks.put(loc, Material.AIR.createBlockData());
                     }
                 }
-            }
 
-            Material fragMat = parseSingleMaterial(type.getFragmentBlock(), Material.MAGMA_BLOCK);
-            int fragCount = Math.min(type.getFragmentCount(), 16);
-            double angleStep = (2 * Math.PI) / Math.max(1, fragCount);
-
-            for (int i = 0; i < fragCount; i++) {
-                double angle = i * angleStep + (random.nextDouble() * 0.3);
-                double dist = (radius * 0.7) + (random.nextDouble() * (radius * 0.3));
-                int fx = (int) Math.round(center.getX() + Math.cos(angle) * dist);
-                int fz = (int) Math.round(center.getZ() + Math.sin(angle) * dist);
-                int fy = world.getHighestBlockYAt(fx, fz);
-
-                Block fBlock = world.getBlockAt(fx, fy, fz);
-                if (!blacklist.contains(fBlock.getType())) {
-                    rollback.addRecord(fBlock.getLocation(), fBlock.getType(), fBlock.getBlockData(), fragMat);
-                    fBlock.setType(fragMat, false);
-                    fragmentLocs.add(fBlock.getLocation());
+                if (type.isCreateFire() && distSq >= (radius - 1) * (radius - 1) && random.nextDouble() < 0.25) {
+                    Location fireLoc = new Location(world, cx + x, cy + 1, cz + z);
+                    fakeBlocks.put(fireLoc, Material.FIRE.createBlockData());
                 }
             }
-
-            Material coreBlockMat = parseSingleMaterial(type.getCoreBlock(), Material.MAGMA_BLOCK);
-            Block baseBlock = world.getBlockAt(center.getBlockX(), center.getBlockY() - Math.min(depth, 1), center.getBlockZ());
-            rollback.addRecord(baseBlock.getLocation(), baseBlock.getType(), baseBlock.getBlockData(), coreBlockMat);
-            baseBlock.setType(coreBlockMat, false);
-
-            chestLoc = baseBlock.getLocation().clone().add(0, 1, 0);
-            coreLoc = chestLoc.clone().add(0.5, 0.5, 0.5);
         }
+
+        Material fragMat = parseSingleMaterial(type.getFragmentBlock(), Material.MAGMA_BLOCK);
+        int fragCount = Math.min(type.getFragmentCount(), 16);
+        double angleStep = (2 * Math.PI) / Math.max(1, fragCount);
+
+        for (int i = 0; i < fragCount; i++) {
+            double angle = i * angleStep + (random.nextDouble() * 0.3);
+            double dist = (radius * 0.7) + (random.nextDouble() * (radius * 0.3));
+            int fx = (int) Math.round(center.getX() + Math.cos(angle) * dist);
+            int fz = (int) Math.round(center.getZ() + Math.sin(angle) * dist);
+            int fy = world.getHighestBlockYAt(fx, fz);
+
+            Location fLoc = new Location(world, fx, fy, fz);
+            fakeBlocks.put(fLoc, fragMat.createBlockData());
+            fragmentLocs.add(fLoc);
+        }
+
+        Material coreBlockMat = parseSingleMaterial(type.getCoreBlock(), Material.MAGMA_BLOCK);
+        Location baseLoc = new Location(world, center.getBlockX(), center.getBlockY() - Math.min(depth, 1), center.getBlockZ());
+        fakeBlocks.put(baseLoc, coreBlockMat.createBlockData());
+
+        Location chestBlockLoc = baseLoc.clone().add(0, 1, 0);
+        fakeBlocks.put(chestBlockLoc, Material.CHEST.createBlockData());
+        chestLoc = chestBlockLoc;
+        coreLoc = chestLoc.clone().add(0.5, 1.3, 0.5);
 
         applyEntitiesImpact(center, radius, protections);
 
-        return new CraterResult(coreLoc, chestLoc, fragmentLocs);
+        return new CraterResult(coreLoc, chestLoc, fragmentLocs, fakeBlocks);
     }
 
     private void applyEntitiesImpact(Location center, int radius, ProtectionSettings protections) {
@@ -175,11 +151,6 @@ public final class CraterEngine {
                 ((LivingEntity) entity).damage(protections.getEntityDamageAmount());
             }
         }
-    }
-
-    private boolean isFoliage(Material m) {
-        String name = m.name();
-        return name.endsWith("_LEAVES") || name.endsWith("_SAPLING") || name.endsWith("_LOG") || name.endsWith("_WOOD");
     }
 
     private List<Material> parseMaterials(List<String> names) {
