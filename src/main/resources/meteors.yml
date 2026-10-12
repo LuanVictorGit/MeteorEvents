@@ -27,7 +27,7 @@ meteors:
     # Default: 110 blocks.
     start-height: 160
     horizontal-offset: 120
-    visual-entity: "FIREBALL"
+    visual-entity: "FIRE_CHARGE"
     trail-particles:
       - "FLAME"
       - "LAVA"
@@ -66,7 +66,7 @@ meteors:
     speed: 0.90
     start-height: 180
     horizontal-offset: 140
-    visual-entity: "END_CRYSTAL"
+    visual-entity: "SNOWBALL"
     trail-particles:
       - "SOUL_FIRE_FLAME"
       - "SNOWFLAKE"
@@ -105,7 +105,7 @@ meteors:
     speed: 0.95
     start-height: 200
     horizontal-offset: 160
-    visual-entity: "DRAGON_FIREBALL"
+    visual-entity: "ENDER_EYE"
     trail-particles:
       - "PORTAL"
       - "DRAGON_BREATH"
@@ -144,7 +144,7 @@ meteors:
     speed: 1.05
     start-height: 240
     horizontal-offset: 180
-    visual-entity: "FIREBALL"
+    visual-entity: "WORLDBREAKER_FIRE_CHARGE"
     trail-particles:
       - "EXPLOSION_LARGE"
       - "FLAME"

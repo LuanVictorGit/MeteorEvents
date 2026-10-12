@@ -63,6 +63,7 @@ public final class ActiveMeteorEvent {
     private final Set<Location> fragmentLocations = Collections.synchronizedSet(new HashSet<>());
     private final AtomicBoolean claimed = new AtomicBoolean(false);
     private Inventory lootInventory;
+    private final List<Location> smokePlumeLocations = new ArrayList<>();
 
     private int omenSecondsRemaining;
     private int explorationSecondsRemaining;
@@ -140,12 +141,25 @@ public final class ActiveMeteorEvent {
                 }
             }
 
+            for (Location plume : smokePlumeLocations) {
+                visualManager.renderSmokePlume(plume, viewDist);
+            }
+            if (explorationSecondsRemaining % 3 == 0 && !smokePlumeLocations.isEmpty()) {
+                Location randomPlume = smokePlumeLocations.get(new Random().nextInt(smokePlumeLocations.size()));
+                visualManager.playLocalizedSound(randomPlume, "BLOCK_CAMPFIRE_CRACKLE", 1.8f, 0.9f);
+                visualManager.playLocalizedSound(randomPlume, "BLOCK_LAVA_EXTINGUISH", 1.0f, 0.8f);
+            }
+
             if (explorationSecondsRemaining <= 0 && !claimed.get()) {
                 finishEvent();
             }
         } else if (stage == Stage.POST_LOOT_VANISHING) {
             vanishSecondsRemaining--;
             updateVanishingHologram();
+
+            for (Location plume : smokePlumeLocations) {
+                visualManager.renderSmokePlume(plume, viewDist);
+            }
 
             if (coreLocation != null) {
                 visualManager.broadcastParticles(coreLocation, Collections.singletonList("SMOKE_LARGE"), 4, 0.4, 0.4, 0.4, 0.02, viewDist);
@@ -164,7 +178,9 @@ public final class ActiveMeteorEvent {
         currentLocation.add(stepVector);
 
         int viewDist = configManager.getViewDistance();
-        visualManager.teleportVisualEntity(meteorEntityId, currentLocation, viewDist);
+        float spinYaw = (flightCurrentTick * 28.0f) % 360.0f;
+        float spinPitch = (flightCurrentTick * 18.0f) % 360.0f;
+        visualManager.teleportVisualEntity(meteorEntityId, currentLocation, spinYaw, spinPitch, viewDist);
 
         visualManager.renderCinematicFlight(currentLocation, stepVector, type.getTrailParticles(),
                 configManager.getMaxParticlesPerTick(), flightCurrentTick, viewDist);
@@ -220,6 +236,22 @@ public final class ActiveMeteorEvent {
                 lootInventory = lootManager.createLootInventory(menuTitle, table);
             }
 
+            int r = Math.max(3, type.getCraterRadius());
+            World w = impactLocation.getWorld();
+            if (w != null) {
+                int plumeCount = Math.max(8, r * 2);
+                double angleStep = (2.0 * Math.PI) / plumeCount;
+                Random rnd = new Random();
+                for (int i = 0; i < plumeCount; i++) {
+                    double angle = (i * angleStep) + ((rnd.nextDouble() - 0.5) * 0.4);
+                    double dist = (r * 0.75) + (rnd.nextDouble() * (r * 0.65));
+                    int px = impactLocation.getBlockX() + (int) Math.round(Math.cos(angle) * dist);
+                    int pz = impactLocation.getBlockZ() + (int) Math.round(Math.sin(angle) * dist);
+                    int py = w.getHighestBlockYAt(px, pz);
+                    smokePlumeLocations.add(new Location(w, px + 0.5, py + 0.8, pz + 0.5));
+                }
+            }
+
             coreEntityId = visualManager.spawnVisualEntity(id, coreLocation, "END_CRYSTAL", viewDist);
 
             spawnInitialHologram();
@@ -234,9 +266,16 @@ public final class ActiveMeteorEvent {
     private void spawnImpactShockwave() {
         int viewDist = configManager.getViewDistance();
         int count = type.getImpactParticlesCount();
-        visualManager.broadcastParticles(impactLocation, Collections.singletonList("EXPLOSION_HUGE"), 5, 0.8, 0.8, 0.8, 0.1, viewDist);
-        visualManager.broadcastParticles(impactLocation, type.getTrailParticles(), count, 3.5, 2.0, 3.5, 0.35, viewDist);
-        visualManager.playLocalizedSound(impactLocation, "ENTITY_GENERIC_EXPLODE", 16.0f, 0.7f);
+        visualManager.broadcastParticles(impactLocation, Collections.singletonList("EXPLOSION_HUGE"), 8, 1.2, 1.2, 1.2, 0.1, viewDist);
+        visualManager.broadcastParticles(impactLocation, Collections.singletonList("CAMPFIRE_SIGNAL_SMOKE"), 30, 2.0, 3.0, 2.0, 0.15, viewDist);
+        visualManager.broadcastParticles(impactLocation, type.getTrailParticles(), count, 4.5, 3.0, 4.5, 0.4, viewDist);
+        visualManager.broadcastParticles(impactLocation, Collections.singletonList("LAVA"), 25, 3.0, 2.0, 3.0, 0.2, viewDist);
+
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_GENERIC_EXPLODE", 16.0f, 0.55f);
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_LIGHTNING_BOLT_THUNDER", 16.0f, 0.50f);
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_DRAGON_FIREBALL_EXPLODE", 16.0f, 0.70f);
+        visualManager.playLocalizedSound(impactLocation, "ENTITY_WITHER_SPAWN", 16.0f, 0.60f);
+        visualManager.playLocalizedSound(impactLocation, "BLOCK_ANVIL_LAND", 16.0f, 0.50f);
     }
 
     private void spawnInitialHologram() {
@@ -451,6 +490,7 @@ public final class ActiveMeteorEvent {
 
         int viewDist = configManager.getViewDistance();
         visualManager.cleanupEvent(id, impactLocation, viewDist);
+        smokePlumeLocations.clear();
 
         rollback.executeRollback(plugin, true);
 

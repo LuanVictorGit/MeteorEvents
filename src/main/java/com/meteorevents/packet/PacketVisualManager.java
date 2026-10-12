@@ -5,7 +5,11 @@ import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityDataTypes;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityType;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
+import com.github.retrooper.packetevents.protocol.item.ItemStack;
+import com.github.retrooper.packetevents.protocol.item.type.ItemType;
+import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
 import com.github.retrooper.packetevents.util.Vector3d;
+import com.github.retrooper.packetevents.util.Vector3f;
 import com.github.retrooper.packetevents.util.adventure.AdventureSerializer;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDestroyEntities;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEntityMetadata;
@@ -58,12 +62,30 @@ public final class PacketVisualManager {
                     Optional.of(new Vector3d(0, 0, 0))
             );
             sendToNearby(location, packet, viewDistance);
+
+            if (type == EntityTypes.ITEM_DISPLAY) {
+                ItemType itemType = resolveItemType(entityTypeStr);
+                ItemStack displayStack = ItemStack.builder().type(itemType).amount(1).build();
+                List<EntityData<?>> metadata = new ArrayList<>();
+                metadata.add(new EntityData<>(8, EntityDataTypes.INT, 0));
+                metadata.add(new EntityData<>(9, EntityDataTypes.INT, 1));
+                metadata.add(new EntityData<>(10, EntityDataTypes.INT, 1));
+                metadata.add(new EntityData<>(11, EntityDataTypes.VECTOR3F, new Vector3f(0f, 0f, 0f)));
+                float scale = entityTypeStr != null && entityTypeStr.toUpperCase(Locale.ROOT).contains("WORLDBREAKER") ? 5.5f : 3.8f;
+                metadata.add(new EntityData<>(12, EntityDataTypes.VECTOR3F, new Vector3f(scale, scale, scale)));
+                metadata.add(new EntityData<>(16, EntityDataTypes.BYTE, (byte) 3));
+                metadata.add(new EntityData<>(23, EntityDataTypes.ITEMSTACK, displayStack));
+                metadata.add(new EntityData<>(24, EntityDataTypes.BYTE, (byte) 0));
+
+                WrapperPlayServerEntityMetadata metaPacket = new WrapperPlayServerEntityMetadata(entityId, metadata);
+                sendToNearby(location, metaPacket, viewDistance);
+            }
         } catch (Throwable ignored) {}
 
         return entityId;
     }
 
-    public void teleportVisualEntity(int entityId, Location location, int viewDistance) {
+    public void teleportVisualEntity(int entityId, Location location, float yaw, float pitch, int viewDistance) {
         if (!Platform.hasPacketEvents() || location == null || location.getWorld() == null) {
             return;
         }
@@ -72,12 +94,16 @@ public final class PacketVisualManager {
             WrapperPlayServerEntityTeleport packet = new WrapperPlayServerEntityTeleport(
                     entityId,
                     pos,
-                    location.getYaw(),
-                    location.getPitch(),
+                    yaw,
+                    pitch,
                     false
             );
             sendToNearby(location, packet, viewDistance);
         } catch (Throwable ignored) {}
+    }
+
+    public void teleportVisualEntity(int entityId, Location location, int viewDistance) {
+        teleportVisualEntity(entityId, location, location != null ? location.getYaw() : 0f, location != null ? location.getPitch() : 0f, viewDistance);
     }
 
     public void destroyVisualEntity(UUID eventId, int entityId, Location location, int viewDistance) {
@@ -328,30 +354,47 @@ public final class PacketVisualManager {
         if (viewers.isEmpty()) return;
 
         for (Player p : viewers) {
-            safeSpawnParticle(p, mainParticle, loc, 14, 0.8, 0.8, 0.8, 0.05);
-            safeSpawnParticle(p, secondaryParticle, loc, 4, 0.5, 0.5, 0.5, 0.02);
+            safeSpawnParticle(p, mainParticle, loc, 24, 1.2, 1.2, 1.2, 0.08);
+            safeSpawnParticle(p, secondaryParticle, loc, 8, 0.8, 0.8, 0.8, 0.04);
+            safeSpawnParticle(p, Particle.CAMPFIRE_COSY_SMOKE, loc, 12, 1.0, 1.0, 1.0, 0.03);
+            safeSpawnParticle(p, Particle.FIREWORKS_SPARK, loc, 6, 0.7, 0.7, 0.7, 0.05);
 
-            double angle1 = tick * 0.45;
-            double angle2 = angle1 + Math.PI;
-            double radius = 1.6;
+            double angleBase = tick * 0.65;
+            double spiralRadius = 2.4;
+            for (int s = 0; s < 3; s++) {
+                double angle = angleBase + (s * (2.0 * Math.PI / 3.0));
+                Vector off = perp1.clone().multiply(Math.cos(angle) * spiralRadius).add(perp2.clone().multiply(Math.sin(angle) * spiralRadius));
+                Location pLoc = loc.clone().add(off);
+                safeSpawnParticle(p, mainParticle, pLoc, 3, 0.1, 0.1, 0.1, 0.01);
+                safeSpawnParticle(p, Particle.LAVA, pLoc, 1, 0.05, 0.05, 0.05, 0.01);
+            }
 
-            Vector off1 = perp1.clone().multiply(Math.cos(angle1) * radius).add(perp2.clone().multiply(Math.sin(angle1) * radius));
-            Vector off2 = perp1.clone().multiply(Math.cos(angle2) * radius).add(perp2.clone().multiply(Math.sin(angle2) * radius));
-
-            Location p1 = loc.clone().add(off1);
-            Location p2 = loc.clone().add(off2);
-            safeSpawnParticle(p, Particle.FLAME, p1, 2, 0.05, 0.05, 0.05, 0.01);
-            safeSpawnParticle(p, Particle.SOUL_FIRE_FLAME, p2, 2, 0.05, 0.05, 0.05, 0.01);
-
-            for (int step = 1; step <= 3; step++) {
-                Location tail = loc.clone().subtract(normDir.clone().multiply(step * 1.8));
-                safeSpawnParticle(p, Particle.CAMPFIRE_COSY_SMOKE, tail, 3, 0.4 * step, 0.4 * step, 0.4 * step, 0.01);
+            for (int step = 1; step <= 5; step++) {
+                Location tail = loc.clone().subtract(normDir.clone().multiply(step * 2.2));
+                safeSpawnParticle(p, Particle.CAMPFIRE_SIGNAL_SMOKE, tail, 4, 0.5 * step, 0.5 * step, 0.5 * step, 0.02);
+                safeSpawnParticle(p, Particle.SMOKE_LARGE, tail, 3, 0.4 * step, 0.4 * step, 0.4 * step, 0.02);
+                safeSpawnParticle(p, mainParticle, tail, 2, 0.3 * step, 0.3 * step, 0.3 * step, 0.02);
             }
         }
 
-        if (tick % 8 == 0) {
-            playLocalizedSound(loc, "ENTITY_FIREWORK_ROCKET_BLAST", 16.0f, 0.6f);
+        if (tick % 3 == 0) {
+            playLocalizedSound(loc, "ITEM_ELYTRA_FLYING", 16.0f, 0.65f);
+            playLocalizedSound(loc, "ENTITY_PHANTOM_SWOOP", 12.0f, 0.45f);
         }
+        if (tick % 6 == 0) {
+            playLocalizedSound(loc, "ENTITY_FIREWORK_ROCKET_LAUNCH", 16.0f, 0.40f);
+            playLocalizedSound(loc, "BLOCK_FIRE_AMBIENT", 8.0f, 0.8f);
+        }
+        if (tick % 12 == 0) {
+            playLocalizedSound(loc, "ENTITY_GHAST_SHOOT", 16.0f, 0.5f);
+        }
+    }
+
+    public void renderSmokePlume(Location loc, int viewDistance) {
+        if (loc == null || loc.getWorld() == null) return;
+        broadcastParticles(loc, Collections.singletonList("CAMPFIRE_SIGNAL_SMOKE"), 3, 0.25, 0.4, 0.25, 0.03, viewDistance);
+        broadcastParticles(loc, Collections.singletonList("CAMPFIRE_COSY_SMOKE"), 2, 0.2, 0.3, 0.2, 0.02, viewDistance);
+        broadcastParticles(loc, Collections.singletonList("FLAME"), 1, 0.15, 0.1, 0.15, 0.01, viewDistance);
     }
 
     public void broadcastParticles(Location loc, List<String> particleNames, int count, double offX, double offY, double offZ, double speed, int viewDistance) {
@@ -406,7 +449,7 @@ public final class PacketVisualManager {
     }
 
     private EntityType resolveEntityType(String name) {
-        if (name == null) return EntityTypes.FIREBALL;
+        if (name == null) return EntityTypes.ITEM_DISPLAY;
         switch (name.toUpperCase(Locale.ROOT)) {
             case "SMALL_FIREBALL":
                 return EntityTypes.SMALL_FIREBALL;
@@ -419,8 +462,32 @@ public final class PacketVisualManager {
             case "FALLING_BLOCK":
                 return EntityTypes.FALLING_BLOCK;
             case "FIREBALL":
-            default:
+            case "LARGE_FIREBALL":
                 return EntityTypes.FIREBALL;
+            case "FIRE_CHARGE":
+            case "SNOWBALL":
+            case "ENDER_EYE":
+            case "WORLDBREAKER_FIRE_CHARGE":
+            case "ITEM_DISPLAY":
+            default:
+                return EntityTypes.ITEM_DISPLAY;
+        }
+    }
+
+    private ItemType resolveItemType(String name) {
+        if (name == null) return ItemTypes.FIRE_CHARGE;
+        switch (name.toUpperCase(Locale.ROOT)) {
+            case "SNOWBALL":
+                return ItemTypes.SNOWBALL;
+            case "ENDER_EYE":
+            case "ENDER_PEARL":
+                return ItemTypes.ENDER_EYE;
+            case "MAGMA_BLOCK":
+                return ItemTypes.MAGMA_BLOCK;
+            case "FIRE_CHARGE":
+            case "WORLDBREAKER_FIRE_CHARGE":
+            default:
+                return ItemTypes.FIRE_CHARGE;
         }
     }
 
