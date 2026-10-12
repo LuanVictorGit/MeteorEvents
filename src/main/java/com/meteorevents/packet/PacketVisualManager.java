@@ -349,9 +349,15 @@ public final class PacketVisualManager {
     }
 
     private void safeSpawnParticle(Player player, Particle particle, Location loc, int count, double offX, double offY, double offZ, double speed) {
+        if (player == null || particle == null || loc == null) return;
         try {
-            if (particle.getDataType() == Void.class) {
+            Class<?> dataType = particle.getDataType();
+            if (dataType == Void.class) {
                 player.spawnParticle(particle, loc, count, offX, offY, offZ, speed);
+            } else if (dataType == Float.class) {
+                player.spawnParticle(particle, loc, count, offX, offY, offZ, speed, 1.0f);
+            } else if (dataType == Integer.class) {
+                player.spawnParticle(particle, loc, count, offX, offY, offZ, speed, 0);
             }
         } catch (Throwable ignored) {}
     }
