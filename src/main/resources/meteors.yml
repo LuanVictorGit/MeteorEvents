@@ -58,6 +58,7 @@ meteors:
     exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
+    loot-duration-seconds: 120
     required-key: "AIR"
     unstable-core: false
 
@@ -100,6 +101,7 @@ meteors:
     exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
+    loot-duration-seconds: 120
     required-key: "AIR"
     unstable-core: true
 
@@ -142,6 +144,7 @@ meteors:
     exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
+    loot-duration-seconds: 120
     required-key: "AIR"
     unstable-core: true
 
@@ -186,5 +189,6 @@ meteors:
     exploration-duration-seconds: 600
     unlock-type: "TIMED"
     lock-duration-seconds: 30
+    loot-duration-seconds: 120
     required-key: "AIR"
     unstable-core: true

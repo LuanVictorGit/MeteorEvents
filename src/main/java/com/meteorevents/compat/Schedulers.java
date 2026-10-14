@@ -56,6 +56,32 @@ public final class Schedulers {
         Bukkit.getScheduler().runTaskLater(plugin, task, ticks);
     }
 
+    public static void runForEntity(Plugin plugin, org.bukkit.entity.Entity entity, Runnable task) {
+        if (entity == null) return;
+        if (Platform.isFolia()) {
+            try {
+                Object scheduler = entity.getClass().getMethod("getScheduler").invoke(entity);
+                Method method = scheduler.getClass().getMethod("run", Plugin.class, Consumer.class, Runnable.class);
+                method.invoke(scheduler, plugin, (Consumer<Object>) scheduled -> task.run(), null);
+                return;
+            } catch (Throwable ignored) {}
+        }
+        Bukkit.getScheduler().runTask(plugin, task);
+    }
+
+    public static void runLaterForEntity(Plugin plugin, org.bukkit.entity.Entity entity, long ticks, Runnable task) {
+        if (entity == null) return;
+        if (Platform.isFolia()) {
+            try {
+                Object scheduler = entity.getClass().getMethod("getScheduler").invoke(entity);
+                Method method = scheduler.getClass().getMethod("runDelayed", Plugin.class, Consumer.class, Runnable.class, long.class);
+                method.invoke(scheduler, plugin, (Consumer<Object>) scheduled -> task.run(), null, ticks);
+                return;
+            } catch (Throwable ignored) {}
+        }
+        Bukkit.getScheduler().runTaskLater(plugin, task, ticks);
+    }
+
     public static TaskHandle runTimerGlobal(Plugin plugin, long initialDelayTicks, long periodTicks, Runnable task) {
         if (Platform.isFolia()) {
             try {

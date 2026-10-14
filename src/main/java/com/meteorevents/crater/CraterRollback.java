@@ -72,6 +72,11 @@ public final class CraterRollback {
 
             Schedulers.runAt(plugin, loc, () -> {
                 Block block = loc.getBlock();
+                if (block.getState() instanceof org.bukkit.block.Chest) {
+                    try {
+                        ((org.bukkit.block.Chest) block.getState()).getBlockInventory().clear();
+                    } catch (Throwable ignored) {}
+                }
                 if (preservePlayerModifications) {
                     Material current = block.getType();
                     if (current != record.getPlacedMaterial() && current != Material.FIRE && current != Material.SOUL_FIRE && current != Material.AIR) {

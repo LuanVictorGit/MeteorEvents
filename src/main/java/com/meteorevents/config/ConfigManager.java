@@ -34,6 +34,7 @@ public final class ConfigManager {
 
     private int omenDurationSeconds = 10;
     private int coreLockSeconds = 30;
+    private int lootDurationSeconds = 120;
     private int postLootVanishSeconds = 30;
     private int defaultExplorationSeconds = 180;
 
@@ -102,6 +103,7 @@ public final class ConfigManager {
 
         omenDurationSeconds = Math.max(3, cfg.getInt("stages.omen-duration-seconds", 10));
         coreLockSeconds = Math.max(0, cfg.getInt("stages.core-lock-seconds", 30));
+        lootDurationSeconds = Math.max(10, cfg.getInt("stages.loot-duration-seconds", 120));
         postLootVanishSeconds = Math.max(5, cfg.getInt("stages.post-loot-vanish-seconds", 30));
         defaultExplorationSeconds = Math.max(30, cfg.getInt("stages.default-exploration-seconds", 600));
     }
@@ -146,6 +148,7 @@ public final class ConfigManager {
             int explorationDuration = Math.max(20, ms.getInt("exploration-duration-seconds", defaultExplorationSeconds));
             String unlockType = ms.getString("unlock-type", "DIRECT");
             int lockDurationSeconds = Math.max(0, ms.getInt("lock-duration-seconds", 0));
+            int meteorLootDuration = Math.max(10, ms.getInt("loot-duration-seconds", lootDurationSeconds));
             String requiredKey = ms.getString("required-key", "AIR");
             boolean unstableCore = ms.getBoolean("unstable-core", false);
             float visualEntityScale = (float) ms.getDouble("visual-entity-scale", key.equalsIgnoreCase("worldbreaker") ? 5.5 : 3.8);
@@ -157,7 +160,7 @@ public final class ConfigManager {
                     impactSound, impactSoundVolume, impactSoundPitch, impactParticlesCount,
                     craterRadius, craterDepth, craterMaterials, createFire, rewardTable,
                     coreType, coreBlock, fragmentCount, fragmentBlock, explorationDuration,
-                    unlockType, lockDurationSeconds, requiredKey, unstableCore,
+                    unlockType, lockDurationSeconds, meteorLootDuration, requiredKey, unstableCore,
                     visualEntityScale, smokePlumesEnabled, smokePlumesCount);
             meteorTypes.put(key.toLowerCase(Locale.ROOT), type);
         }
@@ -364,6 +367,10 @@ public final class ConfigManager {
 
     public int getCoreLockSeconds() {
         return coreLockSeconds;
+    }
+
+    public int getLootDurationSeconds() {
+        return lootDurationSeconds;
     }
 
     public int getPostLootVanishSeconds() {

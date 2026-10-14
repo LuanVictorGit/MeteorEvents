@@ -30,6 +30,9 @@ announcements:
   # Broadcast when the exploration phase concludes.
   ended-chat: "&7The &f{meteor}&7 event has concluded. Remnants have settled."
 
+  # Broadcast when a meteor expires without being looted.
+  unlooted-despawn: "&7The &f{meteor}&7 at &e{x}, {z}&7 was not looted in time and has dissipated. The terrain has fully regenerated."
+
 # Rewards and interaction messages.
 rewards:
   # Title displayed on the loot inventory menu.
@@ -59,7 +62,7 @@ admin:
   event-started: "&aSuccessfully triggered meteor &f{type}&a in world &e{world}&a!"
 
   # When active events are stopped.
-  event-stopped: "&cAll active meteor events have been terminated and cleaned up."
+  event-stopped: "&cTerminated and regenerated &f{count}&c meteor event(s)."
 
   # When the configuration is reloaded.
   reloaded: "&aMeteorEvents configuration reloaded successfully."

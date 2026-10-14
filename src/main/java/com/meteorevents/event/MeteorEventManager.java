@@ -17,6 +17,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 
 public final class MeteorEventManager {
     private final Plugin plugin;
@@ -112,11 +113,12 @@ public final class MeteorEventManager {
         World world = pickAllowedWorld();
         if (world == null) return;
 
-        Location target = findImpactLocation(world);
-        if (target != null) {
-            startEvent(type, target, false);
-            lastEventTimeMillis = now;
-        }
+        findImpactLocationAsync(world, target -> {
+            if (target != null && activeEvents.size() < configManager.getMaxConcurrentEvents()) {
+                startEvent(type, target, false);
+                lastEventTimeMillis = System.currentTimeMillis();
+            }
+        });
     }
 
     public ActiveMeteorEvent startEvent(MeteorType type, Location target, boolean safeTestMode) {
@@ -158,6 +160,74 @@ public final class MeteorEventManager {
         return types.values().iterator().next();
     }
 
+    public void findImpactLocationAsync(World world, Consumer<Location> callback) {
+        if (world == null) {
+            callback.accept(null);
+            return;
+        }
+        findImpactLocationStep(world, 0, callback);
+    }
+
+    private void findImpactLocationStep(World world, int attempt, Consumer<Location> callback) {
+        if (attempt >= 15) {
+            Location spawn = world.getSpawnLocation();
+            Location fallbackProbe = new Location(world, spawn.getX() + 100, 64, spawn.getZ() + 100);
+            Schedulers.runAt(plugin, fallbackProbe, () -> {
+                int y;
+                try {
+                    y = world.getHighestBlockYAt(spawn.getBlockX() + 100, spawn.getBlockZ() + 100);
+                } catch (Throwable t) {
+                    y = spawn.getBlockY();
+                }
+                callback.accept(new Location(world, spawn.getX() + 100.5, y, spawn.getZ() + 100.5));
+            });
+            return;
+        }
+
+        int x;
+        int z;
+        if (configManager.isTargetNearOnlinePlayers() && !world.getPlayers().isEmpty()) {
+            List<Player> players = world.getPlayers();
+            Player targetPlayer = players.get(random.nextInt(players.size()));
+            Location pLoc = targetPlayer.getLocation();
+            double angle = random.nextDouble() * (2 * Math.PI);
+            int dist = configManager.getPlayerOffsetMin() + random.nextInt(Math.max(1, configManager.getPlayerOffsetMax() - configManager.getPlayerOffsetMin()));
+            x = (int) (pLoc.getX() + Math.cos(angle) * dist);
+            z = (int) (pLoc.getZ() + Math.sin(angle) * dist);
+        } else {
+            Location spawn = world.getSpawnLocation();
+            double angle = random.nextDouble() * (2 * Math.PI);
+            int dist = configManager.getMinDistanceFromSpawn() + random.nextInt(Math.max(1, configManager.getMaxDistanceFromSpawn() - configManager.getMinDistanceFromSpawn()));
+            x = (int) (spawn.getX() + Math.cos(angle) * dist);
+            z = (int) (spawn.getZ() + Math.sin(angle) * dist);
+        }
+
+        Location probe = new Location(world, x, 64, z);
+        Schedulers.runAt(plugin, probe, () -> {
+            int y;
+            try {
+                y = world.getHighestBlockYAt(x, z);
+            } catch (Throwable t) {
+                findImpactLocationStep(world, attempt + 1, callback);
+                return;
+            }
+            Location candidate = new Location(world, x + 0.5, y, z + 0.5);
+
+            if (configManager.getProtections().isWorldguardEnabled() && WorldGuardHook.isRegionProtected(candidate)) {
+                findImpactLocationStep(world, attempt + 1, callback);
+                return;
+            }
+
+            Block block = candidate.getBlock();
+            if (configManager.isAvoidWater() && (block.getType() == Material.WATER || block.getType() == Material.LAVA)) {
+                findImpactLocationStep(world, attempt + 1, callback);
+                return;
+            }
+
+            callback.accept(candidate);
+        });
+    }
+
     public Location findImpactLocation(World world) {
         if (world == null) return null;
 
@@ -182,7 +252,12 @@ public final class MeteorEventManager {
                 z = (int) (spawn.getZ() + Math.sin(angle) * dist);
             }
 
-            int y = world.getHighestBlockYAt(x, z);
+            int y;
+            try {
+                y = world.getHighestBlockYAt(x, z);
+            } catch (Throwable t) {
+                continue;
+            }
             Location candidate = new Location(world, x + 0.5, y, z + 0.5);
 
             if (configManager.getProtections().isWorldguardEnabled() && WorldGuardHook.isRegionProtected(candidate)) {
@@ -198,7 +273,13 @@ public final class MeteorEventManager {
         }
 
         Location spawn = world.getSpawnLocation();
-        return new Location(world, spawn.getX() + 100, world.getHighestBlockYAt(spawn.getBlockX() + 100, spawn.getBlockZ() + 100), spawn.getZ() + 100);
+        int y;
+        try {
+            y = world.getHighestBlockYAt(spawn.getBlockX() + 100, spawn.getBlockZ() + 100);
+        } catch (Throwable t) {
+            y = spawn.getBlockY();
+        }
+        return new Location(world, spawn.getX() + 100.5, y, spawn.getZ() + 100.5);
     }
 
     public World pickAllowedWorld() {

@@ -30,6 +30,7 @@ public final class MeteorType {
     private final int explorationDurationSeconds;
     private final String unlockType;
     private final int lockDurationSeconds;
+    private final int lootDurationSeconds;
     private final String requiredKey;
     private final boolean unstableCore;
     private final float visualEntityScale;
@@ -49,8 +50,8 @@ public final class MeteorType {
                 trailParticles, crossingSound, impactSound, impactSoundVolume, impactSoundPitch,
                 impactParticlesCount, craterRadius, craterDepth, craterMaterials, createFire,
                 rewardTable, coreType, coreBlock, fragmentCount, fragmentBlock,
-                explorationDurationSeconds, unlockType, lockDurationSeconds, requiredKey,
-                unstableCore, 3.8f, true, 12);
+                explorationDurationSeconds, unlockType, lockDurationSeconds, explorationDurationSeconds,
+                requiredKey, unstableCore, 3.8f, true, 12);
     }
 
     public MeteorType(String id, String displayName, String rarity, int weight, double speed,
@@ -63,6 +64,24 @@ public final class MeteorType {
                       String unlockType, int lockDurationSeconds, String requiredKey,
                       boolean unstableCore, float visualEntityScale, boolean smokePlumesEnabled,
                       int smokePlumesCount) {
+        this(id, displayName, rarity, weight, speed, startHeight, horizontalOffset, visualEntity,
+                trailParticles, crossingSound, impactSound, impactSoundVolume, impactSoundPitch,
+                impactParticlesCount, craterRadius, craterDepth, craterMaterials, createFire,
+                rewardTable, coreType, coreBlock, fragmentCount, fragmentBlock,
+                explorationDurationSeconds, unlockType, lockDurationSeconds, explorationDurationSeconds,
+                requiredKey, unstableCore, visualEntityScale, smokePlumesEnabled, smokePlumesCount);
+    }
+
+    public MeteorType(String id, String displayName, String rarity, int weight, double speed,
+                      int startHeight, int horizontalOffset, String visualEntity,
+                      List<String> trailParticles, String crossingSound, String impactSound,
+                      float impactSoundVolume, float impactSoundPitch, int impactParticlesCount,
+                      int craterRadius, int craterDepth, List<String> craterMaterials,
+                      boolean createFire, String rewardTable, String coreType, String coreBlock,
+                      int fragmentCount, String fragmentBlock, int explorationDurationSeconds,
+                      String unlockType, int lockDurationSeconds, int lootDurationSeconds,
+                      String requiredKey, boolean unstableCore, float visualEntityScale,
+                      boolean smokePlumesEnabled, int smokePlumesCount) {
         this.id = id;
         this.displayName = displayName;
         this.rarity = rarity;
@@ -89,6 +108,7 @@ public final class MeteorType {
         this.explorationDurationSeconds = explorationDurationSeconds;
         this.unlockType = unlockType;
         this.lockDurationSeconds = lockDurationSeconds;
+        this.lootDurationSeconds = lootDurationSeconds;
         this.requiredKey = requiredKey;
         this.unstableCore = unstableCore;
         this.visualEntityScale = visualEntityScale > 0.1f ? visualEntityScale : 3.8f;
@@ -198,6 +218,10 @@ public final class MeteorType {
 
     public int getLockDurationSeconds() {
         return lockDurationSeconds;
+    }
+
+    public int getLootDurationSeconds() {
+        return lootDurationSeconds;
     }
 
     public String getRequiredKey() {

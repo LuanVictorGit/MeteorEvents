@@ -15,14 +15,23 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import org.bukkit.plugin.Plugin;
+import com.meteorevents.compat.Schedulers;
+
 import java.util.*;
 
 public final class LootManager {
+    private final Plugin plugin;
     private final ConfigManager configManager;
     private final Random random = new Random();
 
-    public LootManager(ConfigManager configManager) {
+    public LootManager(Plugin plugin, ConfigManager configManager) {
+        this.plugin = plugin;
         this.configManager = configManager;
+    }
+
+    public LootManager(ConfigManager configManager) {
+        this(null, configManager);
     }
 
     public List<ItemStack> rollRewards(RewardTable table) {
@@ -119,7 +128,11 @@ public final class LootManager {
         for (RewardTable.CommandReward cmd : table.getCommands()) {
             if (random.nextDouble() * 100.0 <= cmd.getChance()) {
                 String parsed = cmd.getCommand().replace("{player}", player.getName());
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsed);
+                if (plugin != null) {
+                    Schedulers.runGlobal(plugin, () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsed));
+                } else {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), parsed);
+                }
             }
         }
     }

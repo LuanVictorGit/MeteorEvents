@@ -87,8 +87,13 @@ stages:
   # Default: 30 seconds.
   core-lock-seconds: 30
 
-  # Time in seconds after the core is looted before the virtual packet crater disappears.
-  # Because the crater is purely virtual packets, all blocks smoothly vanish.
+  # Time window in seconds after cooling down for players to loot the meteor.
+  # If time runs out before anyone loots, the meteor disappears and regenerates the terrain.
+  # Valid range: 10 - 3600 seconds. Default: 120 (2 minutes).
+  loot-duration-seconds: 120
+
+  # Time in seconds after the core is looted before the remaining crater automatically regenerates.
+  # Gives players time to gather any remaining items from the chest.
   # Default: 30 seconds.
   post-loot-vanish-seconds: 30
 

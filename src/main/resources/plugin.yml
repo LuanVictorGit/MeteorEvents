@@ -12,7 +12,7 @@ commands:
     description: Main MeteorEvents administrative and informational command.
     aliases: [mevents, meteor, meteors]
     permission: meteorevents.info
-    usage: /<command> [start|stop|next|reload|types|test|info]
+    usage: /<command> [start|stop|remove|next|reload|types|test|info]
 permissions:
   meteorevents.admin:
     description: Full administrative control over MeteorEvents.
@@ -20,6 +20,7 @@ permissions:
     children:
       meteorevents.start: true
       meteorevents.stop: true
+      meteorevents.remove: true
       meteorevents.reload: true
       meteorevents.info: true
       meteorevents.test: true
@@ -28,6 +29,9 @@ permissions:
     default: op
   meteorevents.stop:
     description: Allows cancelling active meteor events.
+    default: op
+  meteorevents.remove:
+    description: Allows removing and regenerating all active or fallen meteors.
     default: op
   meteorevents.reload:
     description: Allows reloading plugin configuration files.

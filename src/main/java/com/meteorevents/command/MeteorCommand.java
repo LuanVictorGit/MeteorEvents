@@ -36,6 +36,10 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
                 handleStart(sender, args);
                 break;
             case "stop":
+            case "stopall":
+            case "remove":
+            case "removeall":
+            case "clear":
                 handleStop(sender);
                 break;
             case "next":
@@ -83,28 +87,36 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        Location target;
+        final MeteorType selectedType = type;
         if (sender instanceof Player) {
-            target = ((Player) sender).getLocation();
+            Location target = ((Player) sender).getLocation();
+            eventManager.startEvent(selectedType, target, false);
+            Map<String, String> ph = new HashMap<>();
+            ph.put("type", selectedType.getDisplayName());
+            ph.put("world", target.getWorld().getName());
+            sendMsg(sender, "admin.event-started", ph);
         } else {
-            target = eventManager.findImpactLocation(eventManager.pickAllowedWorld());
+            org.bukkit.World world = eventManager.pickAllowedWorld();
+            if (world == null) {
+                sendMsg(sender, "admin.no-valid-world", null);
+                return;
+            }
+            eventManager.findImpactLocationAsync(world, target -> {
+                if (target == null || target.getWorld() == null) {
+                    sendMsg(sender, "admin.no-valid-world", null);
+                    return;
+                }
+                eventManager.startEvent(selectedType, target, false);
+                Map<String, String> ph = new HashMap<>();
+                ph.put("type", selectedType.getDisplayName());
+                ph.put("world", target.getWorld().getName());
+                sendMsg(sender, "admin.event-started", ph);
+            });
         }
-
-        if (target == null || target.getWorld() == null) {
-            sendMsg(sender, "admin.no-valid-world", null);
-            return;
-        }
-
-        eventManager.startEvent(type, target, false);
-
-        Map<String, String> ph = new HashMap<>();
-        ph.put("type", type.getDisplayName());
-        ph.put("world", target.getWorld().getName());
-        sendMsg(sender, "admin.event-started", ph);
     }
 
     private void handleStop(CommandSender sender) {
-        if (!hasPermission(sender, "meteorevents.stop")) {
+        if (!hasPermission(sender, "meteorevents.stop") && !hasPermission(sender, "meteorevents.remove")) {
             sendMsg(sender, "admin.no-permission", null);
             return;
         }
@@ -114,8 +126,11 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
             return;
         }
 
+        int count = eventManager.getActiveEvents().size();
         eventManager.stopAllEvents();
-        sendMsg(sender, "admin.event-stopped", null);
+        Map<String, String> ph = new HashMap<>();
+        ph.put("count", String.valueOf(count));
+        sendMsg(sender, "admin.event-stopped", ph);
     }
 
     private void handleNext(CommandSender sender) {
@@ -176,23 +191,30 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        Location target;
+        final MeteorType selectedType = type;
         if (sender instanceof Player) {
-            target = ((Player) sender).getLocation();
+            Location target = ((Player) sender).getLocation();
+            eventManager.startEvent(selectedType, target, true);
+            Map<String, String> ph = new HashMap<>();
+            ph.put("type", selectedType.getDisplayName());
+            sendMsg(sender, "admin.test-started", ph);
         } else {
-            target = eventManager.findImpactLocation(eventManager.pickAllowedWorld());
+            org.bukkit.World world = eventManager.pickAllowedWorld();
+            if (world == null) {
+                sendMsg(sender, "admin.no-valid-world", null);
+                return;
+            }
+            eventManager.findImpactLocationAsync(world, target -> {
+                if (target == null || target.getWorld() == null) {
+                    sendMsg(sender, "admin.no-valid-world", null);
+                    return;
+                }
+                eventManager.startEvent(selectedType, target, true);
+                Map<String, String> ph = new HashMap<>();
+                ph.put("type", selectedType.getDisplayName());
+                sendMsg(sender, "admin.test-started", ph);
+            });
         }
-
-        if (target == null || target.getWorld() == null) {
-            sendMsg(sender, "admin.no-valid-world", null);
-            return;
-        }
-
-        eventManager.startEvent(type, target, true);
-
-        Map<String, String> ph = new HashMap<>();
-        ph.put("type", type.getDisplayName());
-        sendMsg(sender, "admin.test-started", ph);
     }
 
     private void handleInfo(CommandSender sender) {
@@ -220,7 +242,8 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "=== " + ChatColor.YELLOW + "MeteorEvents Commands" + ChatColor.GOLD + " ===");
         sender.sendMessage(ChatColor.YELLOW + "/meteorevents start [type]" + ChatColor.GRAY + " - Start a meteor event manually");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents stop" + ChatColor.GRAY + " - Cancel all active meteor events");
+        sender.sendMessage(ChatColor.YELLOW + "/meteorevents stop" + ChatColor.GRAY + " - Cancel and remove all active meteor events");
+        sender.sendMessage(ChatColor.YELLOW + "/meteorevents remove" + ChatColor.GRAY + " - Remove all fallen meteors and regenerate craters");
         sender.sendMessage(ChatColor.YELLOW + "/meteorevents next" + ChatColor.GRAY + " - View next scheduled strike time");
         sender.sendMessage(ChatColor.YELLOW + "/meteorevents types" + ChatColor.GRAY + " - List available meteor types");
         sender.sendMessage(ChatColor.YELLOW + "/meteorevents test [type]" + ChatColor.GRAY + " - Safe visual test (no crater damage)");
@@ -243,7 +266,7 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
         List<String> list = new ArrayList<>();
         if (args.length == 1) {
-            List<String> subcommands = Arrays.asList("start", "stop", "next", "types", "test", "info", "reload", "help");
+            List<String> subcommands = Arrays.asList("start", "stop", "remove", "clear", "next", "types", "test", "info", "reload", "help");
             for (String s : subcommands) {
                 if (s.toLowerCase(Locale.ROOT).startsWith(args[0].toLowerCase(Locale.ROOT))) {
                     list.add(s);

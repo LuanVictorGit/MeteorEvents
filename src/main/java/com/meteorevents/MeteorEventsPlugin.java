@@ -39,7 +39,7 @@ public final class MeteorEventsPlugin extends JavaPlugin {
 
         visualManager = new PacketVisualManager();
         craterEngine = new CraterEngine();
-        lootManager = new LootManager(configManager);
+        lootManager = new LootManager(this, configManager);
         eventManager = new MeteorEventManager(this, configManager, visualManager, craterEngine, lootManager);
         eventManager.start();
         visualManager.registerPacketListener(eventManager);
