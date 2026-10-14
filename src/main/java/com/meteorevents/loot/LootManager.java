@@ -107,12 +107,12 @@ public final class LootManager {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             if (frag.getName() != null && !frag.getName().isEmpty()) {
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', frag.getName()));
+                meta.setDisplayName(com.meteorevents.util.TextUtil.format(frag.getName()));
             }
             if (frag.getLore() != null && !frag.getLore().isEmpty()) {
                 List<String> coloredLore = new ArrayList<>();
                 for (String l : frag.getLore()) {
-                    coloredLore.add(ChatColor.translateAlternateColorCodes('&', l));
+                    coloredLore.add(com.meteorevents.util.TextUtil.format(l));
                 }
                 meta.setLore(coloredLore);
             }
@@ -174,12 +174,12 @@ public final class LootManager {
         ItemMeta meta = stack.getItemMeta();
         if (meta != null) {
             if (itemDef.getName() != null && !itemDef.getName().isEmpty()) {
-                meta.setDisplayName(ChatColor.translateAlternateColorCodes('&', itemDef.getName()));
+                meta.setDisplayName(com.meteorevents.util.TextUtil.format(itemDef.getName()));
             }
             if (itemDef.getLore() != null && !itemDef.getLore().isEmpty()) {
                 List<String> coloredLore = new ArrayList<>();
                 for (String l : itemDef.getLore()) {
-                    coloredLore.add(ChatColor.translateAlternateColorCodes('&', l));
+                    coloredLore.add(com.meteorevents.util.TextUtil.format(l));
                 }
                 meta.setLore(coloredLore);
             }

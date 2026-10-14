@@ -221,8 +221,10 @@ public final class ActiveMeteorEvent {
             if (titleTemplate == null || titleTemplate.isEmpty()) {
                 titleTemplate = "&6&lMeteor Loot - {meteor}";
             }
-            String menuTitle = ChatColor.translateAlternateColorCodes('&',
-                    titleTemplate.replace("{meteor}", type.getDisplayName()).replace("{type}", type.getId()));
+            Map<String, String> titlePh = new HashMap<>();
+            titlePh.put("meteor", type.getDisplayName());
+            titlePh.put("type", type.getId());
+            String menuTitle = com.meteorevents.util.TextUtil.format(titleTemplate, titlePh);
 
             if (chestLocation != null && chestLocation.getBlock().getState() instanceof Chest) {
                 lootManager.populateChest(chestLocation.getBlock(), table);

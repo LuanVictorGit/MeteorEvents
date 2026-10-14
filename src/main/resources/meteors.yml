@@ -9,8 +9,9 @@ meteors:
   # Basic fiery meteor with frequent spawns, magma crater, and common loot.
   # ----------------------------------------------------------------------------
   ember:
-    # Display name shown in chat broadcasts, titles, and boss bars.
-    display-name: "&6&lEmber Meteor"
+    # Display name shown in chat broadcasts, titles, and holograms.
+    # Supports MiniMessage tags (<gradient>, <rainbow>, <#hex>) and & color codes.
+    display-name: "<gradient:#ff6600:#ffcc00><bold>Ember Meteor</bold></gradient>"
 
     # Rarity tier indicator.
     rarity: "COMMON"
@@ -67,7 +68,7 @@ meteors:
   # Glacial meteor with soul fire, snowflakes, blue ice, and chilly loot.
   # ----------------------------------------------------------------------------
   frostfall:
-    display-name: "&b&lFrostfall Meteor"
+    display-name: "<gradient:#55ffff:#ffffff><bold>Frostfall Meteor</bold></gradient>"
     rarity: "RARE"
     weight: 25
     speed: 0.90
@@ -110,7 +111,7 @@ meteors:
   # Cosmic purple meteor with dragon breath, end stone, and mysterious rewards.
   # ----------------------------------------------------------------------------
   voidfall:
-    display-name: "&5&lVoidfall Meteor"
+    display-name: "<gradient:#aa00ff:#ff55ff><bold>Voidfall Meteor</bold></gradient>"
     rarity: "EPIC"
     weight: 15
     speed: 0.95
@@ -153,7 +154,7 @@ meteors:
   # Massive apocalyptic meteor with catastrophic visuals, deep crater, and treasures.
   # ----------------------------------------------------------------------------
   worldbreaker:
-    display-name: "&4&lWorldbreaker Meteor"
+    display-name: "<gradient:#ff0000:#ff8800><bold>Worldbreaker Meteor</bold></gradient>"
     rarity: "LEGENDARY"
     weight: 5
     speed: 1.05

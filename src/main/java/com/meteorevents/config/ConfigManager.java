@@ -1,5 +1,6 @@
 package com.meteorevents.config;
 
+import com.meteorevents.util.TextUtil;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -45,6 +46,7 @@ public final class ConfigManager {
     private final Map<String, MeteorType> meteorTypes = new LinkedHashMap<>();
     private final Map<String, RewardTable> rewardTables = new HashMap<>();
     private final Map<String, String> messages = new HashMap<>();
+    private final Map<String, String> rawMessages = new HashMap<>();
     private ProtectionSettings protections;
 
     public ConfigManager(Plugin plugin) {
@@ -123,7 +125,7 @@ public final class ConfigManager {
             ConfigurationSection ms = section.getConfigurationSection(key);
             if (ms == null) continue;
 
-            String displayName = ChatColor.translateAlternateColorCodes('&', ms.getString("display-name", key));
+            String displayName = TextUtil.format(ms.getString("display-name", key));
             String rarity = ms.getString("rarity", "COMMON");
             int weight = Math.max(1, ms.getInt("weight", 10));
             double speed = Math.max(0.1, ms.getDouble("speed", 0.85));
@@ -192,11 +194,11 @@ public final class ConfigManager {
                 int minAmt = itemMap.containsKey("min-amount") ? ((Number) itemMap.get("min-amount")).intValue() : 1;
                 int maxAmt = itemMap.containsKey("max-amount") ? ((Number) itemMap.get("max-amount")).intValue() : minAmt;
                 double ch = itemMap.containsKey("chance") ? ((Number) itemMap.get("chance")).doubleValue() : 100.0;
-                String name = itemMap.containsKey("name") ? ChatColor.translateAlternateColorCodes('&', String.valueOf(itemMap.get("name"))) : null;
+                String name = itemMap.containsKey("name") ? TextUtil.format(String.valueOf(itemMap.get("name"))) : null;
                 List<String> lore = new ArrayList<>();
                 if (itemMap.containsKey("lore") && itemMap.get("lore") instanceof List) {
                     for (Object l : (List<?>) itemMap.get("lore")) {
-                        lore.add(ChatColor.translateAlternateColorCodes('&', String.valueOf(l)));
+                        lore.add(TextUtil.format(String.valueOf(l)));
                     }
                 }
                 List<String> enchants = new ArrayList<>();
@@ -220,10 +222,10 @@ public final class ConfigManager {
             ConfigurationSection fs = ts.getConfigurationSection("fragment");
             if (fs != null) {
                 String fmat = fs.getString("material", "IRON_NUGGET");
-                String fname = ChatColor.translateAlternateColorCodes('&', fs.getString("name", "&6Meteor Fragment"));
+                String fname = TextUtil.format(fs.getString("name", "&6Meteor Fragment"));
                 List<String> flore = new ArrayList<>();
                 for (String l : fs.getStringList("lore")) {
-                    flore.add(ChatColor.translateAlternateColorCodes('&', l));
+                    flore.add(TextUtil.format(l));
                 }
                 int famt = Math.max(1, fs.getInt("amount", 1));
                 frag = new RewardTable.FragmentReward(fmat, fname, flore, famt);
@@ -235,15 +237,19 @@ public final class ConfigManager {
 
     private void loadMessages() {
         messages.clear();
+        rawMessages.clear();
         File file = new File(plugin.getDataFolder(), "messages.yml");
         FileConfiguration cfg = YamlConfiguration.loadConfiguration(file);
 
-        String prefix = ChatColor.translateAlternateColorCodes('&', cfg.getString("prefix", "&8[&6MeteorEvents&8]&r "));
-        messages.put("prefix", prefix);
+        String prefixRaw = cfg.getString("prefix", "&8[&6MeteorEvents&8]&r ");
+        rawMessages.put("prefix", prefixRaw);
+        messages.put("prefix", TextUtil.format(prefixRaw));
 
         loadStringSubKeys(cfg.getConfigurationSection("announcements"), "announcements.");
         loadStringSubKeys(cfg.getConfigurationSection("rewards"), "rewards.");
         loadStringSubKeys(cfg.getConfigurationSection("admin"), "admin.");
+        loadStringSubKeys(cfg.getConfigurationSection("protections"), "protections.");
+        loadStringSubKeys(cfg.getConfigurationSection("holograms"), "holograms.");
     }
 
     private void loadStringSubKeys(ConfigurationSection section, String prefixKey) {
@@ -251,7 +257,8 @@ public final class ConfigManager {
         for (String key : section.getKeys(false)) {
             String val = section.getString(key);
             if (val != null) {
-                messages.put(prefixKey + key, ChatColor.translateAlternateColorCodes('&', val));
+                rawMessages.put(prefixKey + key, val);
+                messages.put(prefixKey + key, TextUtil.format(val));
             }
         }
     }
@@ -288,13 +295,12 @@ public final class ConfigManager {
     }
 
     public String getFormatted(String path, Map<String, String> placeholders) {
-        String msg = getMessage(path);
-        if (placeholders != null) {
-            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                msg = msg.replace("{" + entry.getKey() + "}", entry.getValue());
-            }
+        String raw = rawMessages.get(path);
+        if (raw == null) {
+            raw = messages.get(path);
+            if (raw == null) return "";
         }
-        return msg;
+        return TextUtil.format(raw, placeholders);
     }
 
     public boolean isEnabled() {

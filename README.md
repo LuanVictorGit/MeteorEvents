@@ -7,7 +7,7 @@ The plugin introduces atmospheric meteor events featuring real-time packet-drive
 
 ## Version
 
-Current version: **1.2.0**
+Current version: **1.3.0**
 
 ## Requirements
 
@@ -96,6 +96,11 @@ mvn test
 
 ## Version History
 
+- **1.3.0:**
+  - **Adventure MiniMessage & Modern RGB Gradients:** Native MiniMessage syntax support (`<gradient:#color1:#color2>text</gradient>`, `<rainbow>`, `<#rrggbb>`, `<bold>`, etc.) across all plugin messages, titles, subtitles, action bars, ArmorStand countdown holograms, meteor display names, and loot reward item names and lores.
+  - **100% Backward Compatibility:** Complete support preserved for traditional `&` legacy color codes (`&a`, `&6`, `&l`, etc.) and hex color formats (`&#rrggbb`).
+  - **Pre-Deserialization Placeholder Interpolation:** Placeholders like `{meteor}`, `{time}`, `{x}`, `{y}`, `{z}`, and `{player}` are seamlessly formatted inside MiniMessage tags, enabling continuous gradient transitions across dynamic values.
+  - **Self-Contained Shaded Build:** Shaded Adventure MiniMessage and legacy serializer components bundled directly into the plugin JAR for zero missing-class errors across Spigot, Paper, and Folia (1.16.5 to 26.x).
 - **1.2.0:**
   - **Unbreakable Meteor Blocks:** All crater and meteor blocks (magma, obsidian, core base, chest, fire, fragments) are completely unbreakable until the meteor event vanishes. Integrated `BlockDamageEvent` and dual-priority `BlockBreakEvent` listeners with immediate client block resync (`sendBlockChange`) to eliminate survival pickaxe mining and ghost blocks.
   - **Precise Chest Interaction:** Restricted chest and core loot opening strictly to the exact block coordinates of the chest or floating core, eliminating false trigger opens when right-clicking surrounding crater blocks.

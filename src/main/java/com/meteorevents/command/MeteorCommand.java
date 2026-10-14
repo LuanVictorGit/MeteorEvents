@@ -240,15 +240,15 @@ public final class MeteorCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelp(CommandSender sender) {
-        sender.sendMessage(ChatColor.GOLD + "=== " + ChatColor.YELLOW + "MeteorEvents Commands" + ChatColor.GOLD + " ===");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents start [type]" + ChatColor.GRAY + " - Start a meteor event manually");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents stop" + ChatColor.GRAY + " - Cancel and remove all active meteor events");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents remove" + ChatColor.GRAY + " - Remove all fallen meteors and regenerate craters");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents next" + ChatColor.GRAY + " - View next scheduled strike time");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents types" + ChatColor.GRAY + " - List available meteor types");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents test [type]" + ChatColor.GRAY + " - Safe visual test (no crater damage)");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents info" + ChatColor.GRAY + " - View active events status");
-        sender.sendMessage(ChatColor.YELLOW + "/meteorevents reload" + ChatColor.GRAY + " - Reload configurations");
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<gold>=== <gradient:#ffaa00:#ffff55>MeteorEvents Commands</gradient> <gold>==="));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents start [type]<gray> - Start a meteor event manually"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents stop<gray> - Cancel and remove all active meteor events"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents remove<gray> - Remove all fallen meteors and regenerate craters"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents next<gray> - View next scheduled strike time"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents types<gray> - List available meteor types"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents test [type]<gray> - Safe visual test (no crater damage)"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents info<gray> - View active events status"));
+        sender.sendMessage(com.meteorevents.util.TextUtil.format("<yellow>/meteorevents reload<gray> - Reload configurations"));
     }
 
     private void sendMsg(CommandSender sender, String path, Map<String, String> ph) {

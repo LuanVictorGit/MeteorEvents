@@ -220,7 +220,7 @@ public final class PacketVisualManager {
     private List<EntityData<?>> createArmorStandMetadata(String text) {
         List<EntityData<?>> list = new ArrayList<>(4);
         list.add(new EntityData<>(0, EntityDataTypes.BYTE, (byte) 0x20));
-        Component comp = AdventureSerializer.fromLegacyFormat(ChatColor.translateAlternateColorCodes('&', text));
+        Component comp = com.meteorevents.util.TextUtil.formatToComponent(text);
         list.add(new EntityData<>(2, EntityDataTypes.OPTIONAL_ADV_COMPONENT, Optional.of(comp)));
         list.add(new EntityData<>(3, EntityDataTypes.BOOLEAN, true));
         list.add(new EntityData<>(14, EntityDataTypes.BYTE, (byte) (0x10 | 0x01)));

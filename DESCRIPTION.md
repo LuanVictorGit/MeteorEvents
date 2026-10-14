@@ -21,6 +21,7 @@
 <li><strong>Directional 3D Audio with Auto-Cutoff:</strong> Flight audio originates from the exact 3D coordinates of the falling meteor. Flight audio immediately halts upon impact, preventing infinite audio loops.</li>
 <li><strong>Interactive Countdown Holograms:</strong> Floating ArmorStand packet holograms count down the cooling period and vanishing phases in real time.</li>
 <li><strong>Loot Chest & Fragment System:</strong> Interactive core chest with custom display names, weighted item rolls, enchantments, and mineable meteorite fragments.</li>
+<li><strong>MiniMessage & Modern RGB Gradients:</strong> Native Adventure MiniMessage formatting (<code>&lt;gradient&gt;</code>, <code>&lt;rainbow&gt;</code>, <code>&lt;#rrggbb&gt;</code>, etc.) across messages, titles, holograms, meteor display names, and loot items, while preserving 100% backward compatibility with classic <code>&amp;</code> color codes.</li>
 <li><strong>Folia Multi-Threaded Region Scheduling:</strong> Native support for Folia regionized threading as well as Spigot and Paper.</li>
 </ul>
 

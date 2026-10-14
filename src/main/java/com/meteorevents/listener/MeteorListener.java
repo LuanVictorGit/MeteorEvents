@@ -70,7 +70,7 @@ public final class MeteorListener implements Listener {
         if (msg == null || msg.isEmpty()) {
             msg = "&cThis impact area is protected until the meteor is looted!";
         }
-        String formatted = ChatColor.translateAlternateColorCodes('&', msg);
+        String formatted = com.meteorevents.util.TextUtil.format(msg);
         player.sendMessage(configManager.getMessage("prefix") + formatted);
         try {
             player.sendTitle("", formatted, 0, 30, 10);

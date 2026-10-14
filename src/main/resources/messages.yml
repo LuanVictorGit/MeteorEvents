@@ -1,27 +1,28 @@
 # ==============================================================================
 # MeteorEvents - Message Configuration
-# All messages support standard Minecraft color codes (&) and placeholders.
+# All messages support MiniMessage tags (<gradient>, <rainbow>, <#hex>, <color>),
+# standard legacy color codes (&), and placeholders.
 # Placeholders: {meteor}, {world}, {x}, {y}, {z}, {player}, {time}, {type}
 # ==============================================================================
 
 # Chat message prefix prepended to informational plugin messages.
-prefix: "&8[&6MeteorEvents&8]&r "
+prefix: "<gradient:#ff8800:#ffff00>[MeteorEvents]</gradient>&r "
 
 # Event stage announcements and broadcasts.
 announcements:
   # Broadcast when a meteor omen begins.
   omen-chat: "&eA cosmic tremor shakes the sky above &f{world}&e! A meteor approaches!"
-  omen-title: "&6&lMETEOR SIGHTED!"
+  omen-title: "<gradient:#ffaa00:#ff5500><bold>METEOR SIGHTED!</bold></gradient>"
   omen-subtitle: "&eWatch the heavens above {world}..."
 
   # Broadcast when the meteor begins its atmospheric crossing.
   crossing-chat: "&6The &f{meteor}&6 has pierced the atmosphere! Heading toward &eX: {x}, Z: {z}&6!"
-  crossing-title: "&c&lINCOMING METEOR!"
+  crossing-title: "<gradient:#ff3300:#ff9900><bold>INCOMING METEOR!</bold></gradient>"
   crossing-subtitle: "&eImpact imminent near &c{x}, {z}&e!"
 
   # Broadcast when the meteor strikes the surface.
   impact-chat: "&c&lIMPACT! &eThe &f{meteor}&e crashed at &c{x}, {y}, {z}&e! Explore the crater!"
-  impact-title: "&4&lMETEOR IMPACT!"
+  impact-title: "<gradient:#ff0000:#ff5500><bold>METEOR IMPACT!</bold></gradient>"
   impact-subtitle: "&eCrater formed at &c{x}, {y}, {z}&e!"
 
   # Warning broadcast before the core destabilizes and ends.
@@ -36,7 +37,7 @@ announcements:
 # Rewards and interaction messages.
 rewards:
   # Title displayed on the loot inventory menu.
-  chest-title: "&6&lMeteor Loot - {meteor}"
+  chest-title: "<gradient:#ffaa00:#ffff55>Meteor Loot - {meteor}</gradient>"
 
   # Message when a player successfully claims the core chest.
   core-claimed-broadcast: "&aPlayer &f{player}&a claimed the rewards of the &f{meteor}&a core at &e{x}, {z}&a!"
@@ -99,10 +100,10 @@ protections:
 
 # Packet hologram floating line configurations.
 holograms:
-  cooling-title: "&6&l✦ {meteor} &6&l✦"
+  cooling-title: "<gradient:#ffaa00:#ff5500><bold>✦ {meteor} ✦</bold></gradient>"
   cooling-subtitle: "&c⏳ Cooling down: &e{time}s"
-  unlocked-title: "&a&l✦ {meteor} &a&l✦"
-  unlocked-subtitle: "&a&l✔ UNLOCKED! &e[Right-Click to Loot]"
+  unlocked-title: "<gradient:#55ff55:#ffff55><bold>✦ {meteor} ✦</bold></gradient>"
+  unlocked-subtitle: "<gradient:#55ff55:#00aa00><bold>✔ UNLOCKED!</bold></gradient> &e[Right-Click to Loot]"
   unlocked-timer: "&e⏳ Regenerating in: &c{time}s"
-  vanishing-title: "&7✦ Remnants Destabilizing ✦"
+  vanishing-title: "<gradient:#aaaaaa:#555555>✦ Remnants Destabilizing ✦</gradient>"
   vanishing-subtitle: "&7⏳ Vanishing in: &e{time}s"
