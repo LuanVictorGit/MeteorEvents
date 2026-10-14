@@ -253,7 +253,7 @@ stages:
 
 <h3>12. Troubleshooting & FAQ</h3>
 <p><strong>Q: Why does the meteor sound continue after landing?</strong><br>
-A: Make sure you are running version 1.1.0+. In this version, non-looping audio cues are utilized and <code>stopSound</code> packets are dispatched on impact.</p>
+A: Make sure you are running version 1.2.0+. In this version, non-looping audio cues are utilized and <code>stopSound</code> packets are dispatched on impact.</p>
 <p><strong>Q: Why does the crater disappear after 30 seconds?</strong><br>
 A: The crater is a virtual packet display. You can customize this timer via <code>stages.post-loot-vanish-seconds</code> in <code>config.yml</code>.</p>
 <p><strong>Q: Can players grief the crater before looting?</strong><br>

@@ -7,7 +7,7 @@ The plugin introduces atmospheric meteor events featuring real-time packet-drive
 
 ## Version
 
-Current version: **1.1.0**
+Current version: **1.2.0**
 
 ## Requirements
 
@@ -96,6 +96,11 @@ mvn test
 
 ## Version History
 
+- **1.2.0:**
+  - **Unbreakable Meteor Blocks:** All crater and meteor blocks (magma, obsidian, core base, chest, fire, fragments) are completely unbreakable until the meteor event vanishes. Integrated `BlockDamageEvent` and dual-priority `BlockBreakEvent` listeners with immediate client block resync (`sendBlockChange`) to eliminate survival pickaxe mining and ghost blocks.
+  - **Precise Chest Interaction:** Restricted chest and core loot opening strictly to the exact block coordinates of the chest or floating core, eliminating false trigger opens when right-clicking surrounding crater blocks.
+  - **Accurate Terrain Rollback:** Rewrote crater rollback tracking using linked coordinate records that preserve true initial world state on repeated block modifications and sort restorations bottom-to-top (ascending Y), completely fixing unreset magma blocks and terrain holes upon event completion or `/meteorevents remove`.
+  - **Environmental Block Protections:** Added strict cancellation for fire burning, fire spreading, block fading, and leaf decay within active impact regions.
 - **1.1.0:**
   - **Folia Multi-Thread Thread Safety:** Resolved asynchronous command dispatch exceptions on Folia by delegating console reward commands to the GlobalRegionScheduler and player inventory actions to entity schedulers.
   - **Admin Remove Command:** Added `/meteorevents remove`, `/meteorevents clear`, and `/meteorevents stop` to immediately terminate all active/fallen meteors and restore terrain.
