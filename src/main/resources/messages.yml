@@ -103,5 +103,6 @@ holograms:
   cooling-subtitle: "&c⏳ Cooling down: &e{time}s"
   unlocked-title: "&a&l✦ {meteor} &a&l✦"
   unlocked-subtitle: "&a&l✔ UNLOCKED! &e[Right-Click to Loot]"
+  unlocked-timer: "&e⏳ Regenerating in: &c{time}s"
   vanishing-title: "&7✦ Remnants Destabilizing ✦"
   vanishing-subtitle: "&7⏳ Vanishing in: &e{time}s"

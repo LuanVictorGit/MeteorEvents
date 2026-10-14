@@ -89,6 +89,11 @@
 <td>Terminates all active events and removes client packet entities immediately.</td>
 </tr>
 <tr>
+<td><code>/meteorevents remove</code></td>
+<td><code>meteorevents.remove</code></td>
+<td>Removes all fallen and active meteors immediately and regenerates craters.</td>
+</tr>
+<tr>
 <td><code>/meteorevents test [type]</code></td>
 <td><code>meteorevents.test</code></td>
 <td>Executes a safe visual flight test without creating crater blocks.</td>
@@ -140,6 +145,11 @@
 <td>Allows halting active events and clearing entities.</td>
 </tr>
 <tr>
+<td><code>meteorevents.remove</code></td>
+<td>op</td>
+<td>Allows removing all fallen meteors and regenerating craters.</td>
+</tr>
+<tr>
 <td><code>meteorevents.reload</code></td>
 <td>op</td>
 <td>Allows reloading configurations on the fly.</td>
@@ -182,6 +192,7 @@ performance:
 stages:
   omen-duration-seconds: 10
   core-lock-seconds: 30
+  loot-duration-seconds: 120
   post-loot-vanish-seconds: 30
   default-exploration-seconds: 600</code></pre>
 </details>

@@ -54,6 +54,7 @@ Current version: **1.1.0**
 |---|---|---|
 | `/meteorevents start [type]` | `meteorevents.start` | Manually starts a meteor event at the player's position or random world spot. |
 | `/meteorevents stop` | `meteorevents.stop` | Immediately cancels all active meteor events and cleans up entities. |
+| `/meteorevents remove` | `meteorevents.remove` | Removes all fallen/active meteors immediately and regenerates craters. |
 | `/meteorevents next` | `meteorevents.info` | Displays the estimated time until the next automated meteor strike. |
 | `/meteorevents types` | `meteorevents.info` | Lists all configured meteor type identifiers. |
 | `/meteorevents test [type]` | `meteorevents.test` | Spawns a safe visual meteor test without altering any terrain blocks. |
@@ -67,6 +68,7 @@ Current version: **1.1.0**
 | `meteorevents.admin` | `op` | Grants access to all administrative commands. |
 | `meteorevents.start` | `op` | Allows manually starting meteor events. |
 | `meteorevents.stop` | `op` | Allows stopping active events. |
+| `meteorevents.remove` | `op` | Allows removing all fallen meteors and regenerating craters. |
 | `meteorevents.reload` | `op` | Allows reloading plugin configurations. |
 | `meteorevents.test` | `op` | Allows running safe visual test strikes. |
 | `meteorevents.info` | `true` | Allows viewing status and upcoming strike timers. |
@@ -95,9 +97,12 @@ mvn test
 ## Version History
 
 - **1.1.0:**
-  - **Virtual Packet Craters:** Impact craters and destroyed terrain are now 100% client-side fake blocks rendered via packets; zero real blocks are modified in the server world.
-  - **Cooldown Hologram & Core Lock:** Added configurable 30-second core looting cooldown with real-time countdown ArmorStand hologram (`&c⏳ Cooling down: &e{time}s` updating every second).
-  - **30s Post-Loot Vanishing Scenery:** Once looted, fake destroyed terrain destabilizes and restores itself cleanly 30 seconds after opening the core.
+  - **Folia Multi-Thread Thread Safety:** Resolved asynchronous command dispatch exceptions on Folia by delegating console reward commands to the GlobalRegionScheduler and player inventory actions to entity schedulers.
+  - **Admin Remove Command:** Added `/meteorevents remove`, `/meteorevents clear`, and `/meteorevents stop` to immediately terminate all active/fallen meteors and restore terrain.
+  - **Looting Window & Auto-Regeneration:** Added configurable `loot-duration-seconds` (default 120s) with live countdown hologram; unlooted meteors automatically dissipate and restore 100% of terrain.
+  - **Virtual Packet Craters:** Impact craters and destroyed terrain are 100% client-side fake blocks rendered via packets; zero real blocks are permanently modified.
+  - **Cooldown Hologram & Core Lock:** Added configurable core looting cooldown with real-time countdown ArmorStand hologram (`&c⏳ Cooling down: &e{time}s` updating every second).
+  - **Post-Loot Vanishing Scenery:** Once looted, fake destroyed terrain destabilizes and restores itself cleanly 30 seconds after opening the core.
   - **High-Altitude Cinematic Trajectory:** Multi-layered particle effects (dense fire core, spinning double-helix trails, sonic smoke cones, and sparks) launched from heights of 160-240 blocks, visible from 256+ blocks away.
   - **3D Spatial Audio:** Atmospheric flight and impact sounds originate realistically from the meteor's coordinates in 3D space with natural distance falloff, eliminating artificial global sound playback.
 - **1.0.1:** Added author metadata (`lHawk_`) and official contact URL (`https://minebuilders.com.br`) across `plugin.yml`, `pom.xml`, and documentation.
