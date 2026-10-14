@@ -44,29 +44,38 @@ public final class CraterRollback {
         }
     }
 
-    private final List<BlockRecord> records = new ArrayList<>();
-    private final Set<String> modifiedKeys = new HashSet<>();
+    private final java.util.Map<String, BlockRecord> records = new java.util.LinkedHashMap<>();
 
     public void addRecord(Location loc, Material originalMaterial, BlockData originalData, Material placedMaterial) {
-        records.add(new BlockRecord(loc, originalMaterial, originalData, placedMaterial));
-        if (loc != null && loc.getWorld() != null) {
-            modifiedKeys.add(loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
+        if (loc == null || loc.getWorld() == null) return;
+        String key = loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
+        BlockRecord existing = records.get(key);
+        if (existing == null) {
+            records.put(key, new BlockRecord(loc, originalMaterial, originalData, placedMaterial));
+        } else {
+            records.put(key, new BlockRecord(loc, existing.getOriginalMaterial(), existing.getOriginalData(), placedMaterial));
         }
     }
 
     public boolean containsLocation(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
-        return modifiedKeys.contains(loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ());
+        String key = loc.getWorld().getName() + ":" + loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
+        return records.containsKey(key);
     }
 
     public List<BlockRecord> getRecords() {
-        return records;
+        return new ArrayList<>(records.values());
     }
 
     public void executeRollback(Plugin plugin, boolean preservePlayerModifications) {
         if (records.isEmpty()) return;
 
-        for (BlockRecord record : records) {
+        List<BlockRecord> toRollback = new ArrayList<>(records.values());
+        records.clear();
+
+        toRollback.sort(java.util.Comparator.comparingInt(r -> r.getLocation().getBlockY()));
+
+        for (BlockRecord record : toRollback) {
             final Location loc = record.getLocation();
             if (loc == null || loc.getWorld() == null) continue;
 
@@ -77,11 +86,16 @@ public final class CraterRollback {
                         ((org.bukkit.block.Chest) block.getState()).getBlockInventory().clear();
                     } catch (Throwable ignored) {}
                 }
+
                 if (preservePlayerModifications) {
                     Material current = block.getType();
                     if (current != record.getPlacedMaterial() && current != Material.FIRE && current != Material.SOUL_FIRE && current != Material.AIR) {
                         return;
                     }
+                }
+
+                if (block.getType() == Material.FIRE || block.getType() == Material.SOUL_FIRE) {
+                    block.setType(Material.AIR, false);
                 }
 
                 if (record.getOriginalData() != null) {
@@ -91,7 +105,5 @@ public final class CraterRollback {
                 }
             });
         }
-        records.clear();
-        modifiedKeys.clear();
     }
 }

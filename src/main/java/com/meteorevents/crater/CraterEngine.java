@@ -121,7 +121,7 @@ public final class CraterEngine {
                         if (fireBlock.getType() == Material.AIR && support.getType().isSolid()
                                 && support.getType() != Material.WATER && support.getType() != Material.ICE
                                 && support.getType() != Material.BLUE_ICE && support.getType() != Material.PACKED_ICE) {
-                            rollback.addRecord(fireBlock.getLocation(), Material.AIR, null, Material.FIRE);
+                            rollback.addRecord(fireBlock.getLocation(), fireBlock.getType(), fireBlock.getBlockData(), Material.FIRE);
                             fireBlock.setType(Material.FIRE, false);
                         }
                     }

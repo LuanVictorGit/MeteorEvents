@@ -345,14 +345,16 @@ public final class ActiveMeteorEvent {
     public boolean isChestOrCore(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
         if (chestLocation != null && chestLocation.getWorld() != null && chestLocation.getWorld().equals(loc.getWorld())) {
-            if (chestLocation.getBlockX() == loc.getBlockX() && chestLocation.getBlockZ() == loc.getBlockZ()) {
-                if (Math.abs(chestLocation.getBlockY() - loc.getBlockY()) <= 1) {
-                    return true;
-                }
+            if (chestLocation.getBlockX() == loc.getBlockX()
+                    && chestLocation.getBlockY() == loc.getBlockY()
+                    && chestLocation.getBlockZ() == loc.getBlockZ()) {
+                return true;
             }
         }
         if (coreLocation != null && coreLocation.getWorld() != null && coreLocation.getWorld().equals(loc.getWorld())) {
-            if (coreLocation.distanceSquared(loc) <= 5.0) {
+            if (coreLocation.getBlockX() == loc.getBlockX()
+                    && coreLocation.getBlockY() == loc.getBlockY()
+                    && coreLocation.getBlockZ() == loc.getBlockZ()) {
                 return true;
             }
         }
@@ -361,19 +363,31 @@ public final class ActiveMeteorEvent {
 
     public boolean isInImpactRegion(Location loc) {
         if (loc == null || loc.getWorld() == null) return false;
-        if (stage != Stage.EXPLORATION && stage != Stage.POST_LOOT_VANISHING) return false;
+        if (stage == Stage.COMPLETED) return false;
         if (!loc.getWorld().equals(impactLocation.getWorld())) return false;
 
         if (rollback.containsLocation(loc)) {
             return true;
         }
 
-        int radius = type.getCraterRadius() + 3;
+        if (chestLocation != null && chestLocation.getWorld() != null && chestLocation.getWorld().equals(loc.getWorld())) {
+            if (chestLocation.getBlockX() == loc.getBlockX()
+                    && chestLocation.getBlockY() == loc.getBlockY()
+                    && chestLocation.getBlockZ() == loc.getBlockZ()) {
+                return true;
+            }
+        }
+
+        if (stage != Stage.IMPACT && stage != Stage.EXPLORATION && stage != Stage.POST_LOOT_VANISHING) {
+            return false;
+        }
+
+        int radius = type.getCraterRadius() + 4;
         double dx = loc.getX() - impactLocation.getX();
         double dz = loc.getZ() - impactLocation.getZ();
         if (dx * dx + dz * dz <= radius * radius) {
-            int depth = type.getCraterDepth() + 5;
-            return loc.getY() >= impactLocation.getY() - depth && loc.getY() <= impactLocation.getY() + 10;
+            int depth = type.getCraterDepth() + 10;
+            return loc.getY() >= impactLocation.getY() - depth && loc.getY() <= impactLocation.getY() + 15;
         }
 
         return false;
